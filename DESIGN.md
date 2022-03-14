@@ -86,3 +86,8 @@ Given the 1:many Group:Runner relationship, there will need to be some sort of c
 Additionally, the Runner will need to not only execute all the tests belonging to a given Group, but also all the tests belonging to any nested Groups, which can contain nested Groups of their own, continuing to an arbitrary depth.
 
 These relationships & the need for a traversal of unknown breadth & depth probably lead to a recursive algorithm.
+This could either happen on the fly as the tree of test Groups is traversed using `Class.getMethods()` & `Class.getClasses()`. 
+On the fly is simple, but might be more difficult to find room for efficiency.
+Alternatively, the Group classes & their nested Groups could be traversed first, without any execution of their tests.
+This would require building a tree of some sort containing pointers to all the test methods (and possibly other data too like descriptive names or shared state).
+This alternative feels more complex, but might make it easier to execute tests simultaneously & asynchronously for faster total test execution time.

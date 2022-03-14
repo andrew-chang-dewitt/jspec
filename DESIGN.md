@@ -23,17 +23,19 @@ Encompasses features that are used to write, group, set up, & tear down tests.
 - A User can define code that needs to be run once after executing a group of tests by defining a method called `after`.
 - A User can define code that needs to be run after each test in a group of tests by defining a method called `afterEach`.
 
-**TODO:** Define some features that are used to manage assertions. It'd be nice to keep them simple (using basic `assert` keyword & assoc. syntax), but grant some nice features around the error messaging on failure. Also would be nice to have some ability to have multiple assertions in one test and still all when a preceding one fails. This will require some thought on how best to design these features.
-
 #### Some thoughts on assertions
+
+I'd like to have some features that are used to manage assertions.
+It'd be nice to keep them simple (using basic `assert` keyword & assoc. syntax), but grant some nice features around the error messaging on failure.
+Also would be nice to have some ability to have multiple assertions in one test and still check all when a preceding one fails.
 
 Any sort of chaining of assertions or execution of multiple assertions will require an assertions library or some sort of preprocessor macro, e.g.:
 
 
 ```java
-// … using multiple assertions 
+// … using multiple assertions
 
-// plain assert statements with preprocessor 
+// plain assert statements with preprocessor
 assert true : “this will pass”;
 assert false : “this will fail”;
 assert true : “this will pass after the failure”;
@@ -54,6 +56,16 @@ At the end of the day, either of those examples will require some sort of “sub
 
 Encompasses features for executing tests, evaluating for success or failure, & communicating that state to the user.
 
+- A User can run a test class (& any nested classes) manually by defining a main() method that creates an instance of itself & calls the instance's run() method.
+- A User receives a concise indicator of test result status after running a test class with a '.' to indicate a successful test & an 'F' to indicate a failure.
+- A User receives a count of successful tests out of total tests at the end of the report.
+- A User receives details about any failed test, including the test class name, test method name, failure reason (exception name & message), & any stack trace.
+- A User can opt to receive a verbose output of test result status, consisting of the test class name, followed by a list of test method names & "Success" or "Failure", depending on the result.
+
 ### Test discovery
 
 Encompasses features for recursively finding all tests in a given directory & running them.
+
+- A User can use a cli command (e.g. `jspec test` or `maven test`) have jspec recursively traverse a given (could default to PWD or project) directory & subdirectories & discover any files ending in `Spec.java`, then run the tests for all files found.
+- A User can give a glob pattern to use when searching for spec files, replacing the default `Spec.java` pattern.
+- A User can specify a single test file to run.

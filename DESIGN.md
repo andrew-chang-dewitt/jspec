@@ -69,3 +69,20 @@ Encompasses features for recursively finding all tests in a given directory & ru
 - A User can use a cli command (e.g. `jspec test` or `maven test`) have jspec recursively traverse a given (could default to PWD or project) directory & subdirectories & discover any files ending in `Spec.java`, then run the tests for all files found.
 - A User can give a glob pattern to use when searching for spec files, replacing the default `Spec.java` pattern.
 - A User can specify a single test file to run.
+
+Data design
+---
+
+So far, I think there's a few obvious conclusions about how the solution might work.
+
+1. There's 3 separate parts here: a Group (& its contained tests/sub-groups), a Runner, & a CLI.
+  A CLI requires a Runner & a Runner requires at least one Group, but a Group doesn't need to know anything about the Runner & the Runner doesn't need to know anything about the CLI.
+2. A Runner may execute tests contained in multiple Groups, so it will need to know how to organize them & what order (if any) to do the tests in.
+3. There's no need for data permanence, as tests are simply functions.
+  If the test-writer needs the test to work with any data, that is a separate problem that will need to be solved by the writer.
+
+Point 2 implies a 1:many Group:Runner relationship & point 1 implies a 1:1 CLI:Runner relationship.
+Given the 1:many Group:Runner relationship, there will need to be some sort of collection on Runner to hold the aggregation of Groups.
+Additionally, the Runner will need to not only execute all the tests belonging to a given Group, but also all the tests belonging to any nested Groups, which can contain nested Groups of their own, continuing to an arbitrary depth.
+
+These relationships & the need for a traversal of unknown breadth & depth probably lead to a recursive algorithm.

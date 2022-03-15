@@ -1,9 +1,13 @@
-Test Lib
+JSpec testing library
 ===
 
 A simple unit testing library for TDD & cli for running tests.
 
-Features
+- **Intended User:** Java developers to write & evaluate unit tests.
+- **Problem solved:** Unit test writing & evaluation.
+- **Technologies needed:** CLI commands, file i/0, & output to stdout
+
+Use Case Analysis
 ---
 
 Features belong to one of three categories: definition, running, & discovery.
@@ -73,6 +77,31 @@ Encompasses features for recursively finding all tests in a given directory & ru
 Data design
 ---
 
+- _What data is your program really about?_
+
+  In this case, the 'data' in question is code: a test is simply code used to set up & declare a fact, then evaluate if it is true or not.
+  So to that end, data starts as code, then is transformed to a 'Success' or 'Failure' statement by evaluating the test's assertions.
+
+- _What is the best way to represent that data? (database, object, arrays)_
+
+  The data will be represented as Objects defined by the User & inherited from an Object provided by this library.
+  Each Object will contain tests defined as methods on the Object.
+
+- _Will the data need to be persistent? How will you make that happen?_
+
+  The only data persistence will be the tests defined by the User in `*.java` files. For the most simple use case, there won't be any File I/O, as the User will set up the test Object to be compiled & run using the Java compiler & runtime.
+  In more complex use cases, the User may use a CLI provided by the library that will utilize File I/O APIs to "discover" tests & then evaluate them.
+
+- _Will the data need to be aggregated into a larger structure?_
+
+  In the simple use case, the User will handle aggregation by defining their own `TestRunner` Object with its own `main()` method that adds `TestGroups` to the `TestRunner` before evaluating the Groups.
+  When using the CLI, the program will need to aggregate `TestGroups` into a `TestRunner` that is then used to evaluate the tests.
+  In both cases, the `TestRunner` will provide two options for adding `TestGroups`: via the `TestRunner()` constructor during initialization, or by calling the `TestRunner.addGroup()` method after initialization.
+  Internally, the `TestRunner` will aggregate `TestGroups` in an array or vector.
+  During test evaluation, the collection will be traversed & the `TestGroups` will be inspected using `java.lang.reflect` APIs to discover all test methods & any nested `TestGroups`. As tests & test groups are discovered they could either be evaluated immediately, or have references to them stored in a tree that will later be traversed for the actual evaluation of each test.
+
+### Notes/Thoughts on Data Design:
+
 So far, I think there's a few obvious conclusions about how the solution might work.
 
 1. There's 3 separate parts here: a Group (& its contained tests/sub-groups), a Runner, & a CLI.
@@ -86,7 +115,7 @@ Given the 1:many Group:Runner relationship, there will need to be some sort of c
 Additionally, the Runner will need to not only execute all the tests belonging to a given Group, but also all the tests belonging to any nested Groups, which can contain nested Groups of their own, continuing to an arbitrary depth.
 
 These relationships & the need for a traversal of unknown breadth & depth probably lead to a recursive algorithm.
-This could either happen on the fly as the tree of test Groups is traversed using `Class.getMethods()` & `Class.getClasses()`. 
+This could either happen on the fly as the tree of test Groups is traversed using `Class.getMethods()` & `Class.getClasses()`.
 On the fly is simple, but might be more difficult to find room for efficiency.
 Alternatively, the Group classes & their nested Groups could be traversed first, without any execution of their tests.
 This would require building a tree of some sort containing pointers to all the test methods (and possibly other data too like descriptive names or shared state).

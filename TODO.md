@@ -1,0 +1,4 @@
+- [ ] define TestGroup & write tests
+- [ ] research Java packaging
+- [ ] do more research on asynchronous Java programming
+- [ ] research tree structures

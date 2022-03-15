@@ -91,3 +91,37 @@ On the fly is simple, but might be more difficult to find room for efficiency.
 Alternatively, the Group classes & their nested Groups could be traversed first, without any execution of their tests.
 This would require building a tree of some sort containing pointers to all the test methods (and possibly other data too like descriptive names or shared state).
 This alternative feels more complex, but might make it easier to execute tests simultaneously & asynchronously for faster total test execution time.
+
+Classes
+---
+
+### TestGroup
+
+A User creates a Group of tests by defining a new class that inherits from this class.
+Nested groups are created by defining a member class inside a child of TestGroup that also inherits from TestGroup.
+Most User stories belonging to the **Test Definition** group above will be built as features on TestGroup.
+
+There might be subclasses of TestGroup that add some sort of functionality that changes a typical TestGroup's behavior, i.e. asynchronous test execution.
+
+### TestRunner
+
+A User creates an instance of this to run any test Groups passed to it on creation, or by adding them to the Runner instance using the `addGroup()` method.
+
+```java
+import org.jspec.TestRunner;
+
+class Runner extends TestRunner {
+  public static void main(String[] args) {
+    // Add test groups during TestRunner initialization
+    Runner r = new Runner(GroupA, GroupB);
+
+    // Add a group using TestRunner.addGroup()
+    r.addGroup(GroupB);
+
+    // run the tests in all groups given
+    r.run();
+  }
+}
+```
+
+The CLI will work by auto-discovering test Groups in a directory & subdirectory, then creating a new TestRunner instance & giving all the found Groups to the new TestRunner.

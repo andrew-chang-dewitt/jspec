@@ -94,57 +94,57 @@ Data design
 
 - _Will the data need to be aggregated into a larger structure?_
 
-  In the simple use case, the User will handle aggregation by defining their own `TestRunner` Object with its own `main()` method that adds `TestGroups` to the `TestRunner` before evaluating the Groups.
-  When using the CLI, the program will need to aggregate `TestGroups` into a `TestRunner` that is then used to evaluate the tests.
-  In both cases, the `TestRunner` will provide two options for adding `TestGroups`: via the `TestRunner()` constructor during initialization, or by calling the `TestRunner.addGroup()` method after initialization.
-  Internally, the `TestRunner` will aggregate `TestGroups` in an array or vector.
-  During test evaluation, the collection will be traversed & the `TestGroups` will be inspected using `java.lang.reflect` APIs to discover all test methods & any nested `TestGroups`. As tests & test groups are discovered they could either be evaluated immediately, or have references to them stored in a tree that will later be traversed for the actual evaluation of each test.
+  In the simple use case, the User will handle aggregation by defining their own `Runner` Object with its own `main()` method that adds `Group`s to the `Runner` before evaluating the `Group`s.
+  When using the CLI, the program will need to aggregate `Group`s into a `Runner` that is then used to evaluate the tests.
+  In both cases, the `Runner` will provide two options for adding `Group`s: via the `Runner()` constructor during initialization, or by calling the `Runner.addGroup()` method after initialization.
+  Internally, the `Runner` will aggregate `Group`s in an array or vector.
+  During test evaluation, the collection will be traversed & the `Group`s will be inspected using `java.lang.reflect` APIs to discover all test methods & any nested `Group`s. As tests & test groups are discovered they could either be evaluated immediately, or have references to them stored in a tree that will later be traversed for the actual evaluation of each test.
 
 ### Notes/Thoughts on Data Design:
 
 So far, I think there's a few obvious conclusions about how the solution might work.
 
-1. There's 3 separate parts here: a Group (& its contained tests/sub-groups), a Runner, & a CLI.
-  A CLI requires a Runner & a Runner requires at least one Group, but a Group doesn't need to know anything about the Runner & the Runner doesn't need to know anything about the CLI.
-2. A Runner may execute tests contained in multiple Groups, so it will need to know how to organize them & what order (if any) to do the tests in.
+1. There's 3 separate parts here: a `Group` (& its contained tests/sub-groups), a `Runner`, & a CLI.
+  A CLI requires a `Runner` & a `Runner` requires at least one `Group`, but a `Group` doesn't need to know anything about the `Runner` & the `Runner` doesn't need to know anything about the CLI.
+2. A `Runner` may execute tests contained in multiple `Group`s, so it will need to know how to organize them & what order (if any) to do the tests in.
 3. There's no need for data permanence, as tests are simply functions.
   If the test-writer needs the test to work with any data, that is a separate problem that will need to be solved by the writer.
 
-Point 2 implies a 1:many Group:Runner relationship & point 1 implies a 1:1 CLI:Runner relationship.
-Given the 1:many Group:Runner relationship, there will need to be some sort of collection on Runner to hold the aggregation of Groups.
-Additionally, the Runner will need to not only execute all the tests belonging to a given Group, but also all the tests belonging to any nested Groups, which can contain nested Groups of their own, continuing to an arbitrary depth.
+Point 2 implies a 1:many `Group`:`Runner` relationship & point 1 implies a 1:1 CLI:`Runner` relationship.
+Given the 1:many `Group`:`Runner` relationship, there will need to be some sort of collection on `Runner` to hold the aggregation of `Group`s.
+Additionally, the `Runner` will need to not only execute all the tests belonging to a given `Group`, but also all the tests belonging to any nested `Group`s, which can contain nested `Group`s of their own, continuing to an arbitrary depth.
 
 These relationships & the need for a traversal of unknown breadth & depth probably lead to a recursive algorithm.
-This could either happen on the fly as the tree of test Groups is traversed using `Class.getMethods()` & `Class.getClasses()`.
+This could either happen on the fly as the tree of test `Group`s is traversed using `Class.getMethods()` & `Class.getClasses()`.
 On the fly is simple, but might be more difficult to find room for efficiency.
-Alternatively, the Group classes & their nested Groups could be traversed first, without any execution of their tests.
+Alternatively, the `Group` classes & their nested `Group`s could be traversed first, without any execution of their tests.
 This would require building a tree of some sort containing pointers to all the test methods (and possibly other data too like descriptive names or shared state).
 This alternative feels more complex, but might make it easier to execute tests simultaneously & asynchronously for faster total test execution time.
 
 Classes
 ---
 
-### TestGroup
+### Group
 
-A User creates a Group of tests by defining a new class that inherits from this class.
-Nested groups are created by defining a member class inside a child of TestGroup that also inherits from TestGroup.
-Most User stories belonging to the **Test Definition** group above will be built as features on TestGroup.
+A User creates a `Group` of tests by defining a new class that inherits from this class.
+Nested groups are created by defining a member class inside a child of `Group` that also inherits from `Group`.
+Most User stories belonging to the **Definition** group above will be built as features on `Group`.
 
-There might be subclasses of TestGroup that add some sort of functionality that changes a typical TestGroup's behavior, i.e. asynchronous test execution.
+There might be subclasses of `Group` that add some sort of functionality that changes a typical `Group`'s behavior, i.e. asynchronous test execution.
 
-### TestRunner
+### Runner
 
-A User creates an instance of this to run any test Groups passed to it on creation, or by adding them to the Runner instance using the `addGroup()` method.
+A User creates an instance of this to run any test `Group`s passed to it on creation, or by adding them to the `Runner` instance using the `addGroup()` method.
 
 ```java
-import org.jspec.TestRunner;
+import org.jspec.Runner;
 
-class Runner extends TestRunner {
+class Runner extends Runner {
   public static void main(String[] args) {
-    // Add test groups during TestRunner initialization
+    // Add test groups during Runner initialization
     Runner r = new Runner(GroupA, GroupB);
 
-    // Add a group using TestRunner.addGroup()
+    // Add a group using Runner.addGroup()
     r.addGroup(GroupB);
 
     // run the tests in all groups given
@@ -153,4 +153,4 @@ class Runner extends TestRunner {
 }
 ```
 
-The CLI will work by auto-discovering test Groups in a directory & subdirectory, then creating a new TestRunner instance & giving all the found Groups to the new TestRunner.
+The CLI will work by auto-discovering test `Group`s in a directory & subdirectory, then creating a new `Runner` instance & giving all the found `Group`s to the new `Runner`.

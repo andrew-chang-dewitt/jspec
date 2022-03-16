@@ -1,4 +1,6 @@
 - [ ] define TestGroup & write tests
+- [ ] define `Runner` & write tests
+- [ ] define `CLI` & write tests
 - [ ] research Java packaging
 - [ ] do more research on asynchronous Java programming
 - [ ] research tree structures

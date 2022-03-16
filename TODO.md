@@ -1,6 +1,8 @@
 - [ ] define TestGroup & write tests
 - [ ] define `Runner` & write tests
 - [ ] define `CLI` & write tests
-- [ ] research Java packaging
+- [x] research Java packaging
+  - more modern packaging is worth it for real world dev, use Gradle (preferred) or maybe Maven
+  - not necessary for this project though, can just use make to handle compiling, building, & testing; can even create target that "installs" jspec to PATH to make it globally available or locally installs using direnv (if available)
 - [ ] do more research on asynchronous Java programming
 - [ ] research tree structures

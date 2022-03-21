@@ -179,24 +179,24 @@ C is nested in B, & B is nested in A; D is unrelated.
 
 ```
 Group A
-  Some test description ✔️
+  Some test description ✅
   Another test description ❌
-  testATestMethodName ✔️
+  testATestMethodName ✅
   testSomeOtherTest ❌
 
     Group B
-      Some test description ✔️
+      Some test description ✅
       Another test description ❌
 
       Group C
-        Some test description ✔️
-        testSomeOtherTest ✔️
+        Some test description ✅
+        testSomeOtherTest ✅
 
 Group D
-  Some test description ✔️
-  Another test description ✔️
-  testATestMethodName ✔️
-  testSomeOtherTest ✔️
+  Some test description ✅
+  Another test description ✅
+  testATestMethodName ✅
+  testSomeOtherTest ✅
 
 ```
 

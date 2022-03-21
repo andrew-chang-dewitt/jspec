@@ -121,8 +121,104 @@ Alternatively, the `Group` classes & their nested `Group`s could be traversed fi
 This would require building a tree of some sort containing pointers to all the test methods (and possibly other data too like descriptive names or shared state).
 This alternative feels more complex, but might make it easier to execute tests simultaneously & asynchronously for faster total test execution time.
 
-Classes
+UI Design
 ---
+
+The main portion of the UI is the text output of test results.
+This is mainly broken down into 4 parts:
+
+1. A progress indicator (using `.` & `F` to represent a test's completion & result)
+2. A failure result (detailed output regarding a failed test, incl. stack trace, error type/message, test-writer messaging, maybe even code snippets?)
+3. Verbose status output (Using Group's descriptions & test descriptions to generate output as a series of nested lists)
+4. Summary (a count of all tests, a count of passed tests)
+
+Sample output for each part below.
+
+### Progress indicator
+
+```
+.....F....F..F.....
+```
+
+### Failure result
+
+```
+================================================================================
+FAILURE: Some group name/description: Some test name/description
+================================================================================
+
+SomeErrorType: An error message
+
+Possible detailed error messaging
+can go here, e.g.
+1 != 0
+or 
+  Line same
++ Line differentA
+- Line differentB
+  Line same
+  Line same
+
+Stack trace output follows last
+  Some Method() nn:mm in SomeModule
+  Some Method() nn:mm on SomeClass
+  Some Method() nn:mm in SomeModule
+  Some Method() nn:mm on SomeClass
+  Some Method() nn:mm in SomeModule
+  Some Method() nn:mm on SomeClass
+  Some Method() nn:mm in SomeModule
+  Some Method() nn:mm on SomeClass
+
+
+```
+
+### Verbose status report
+
+Assume 4 Groups, A, B, C, & D.
+C is nested in B, & B is nested in A; D is unrelated.
+
+```
+Group A
+  Some test description ✔️
+  Another test description ❌
+  testATestMethodName ✔️
+  testSomeOtherTest ❌
+
+    Group B
+      Some test description ✔️
+      Another test description ❌
+
+      Group C
+        Some test description ✔️
+        testSomeOtherTest ✔️
+
+Group D
+  Some test description ✔️
+  Another test description ✔️
+  testATestMethodName ✔️
+  testSomeOtherTest ✔️
+
+```
+
+### Summary
+
+Some failure(s):
+
+```
+9/15 Passed
+```
+
+No failures:
+
+```
+15/15 Passed! 
+```
+
+Algorithm
+---
+
+The program is strictly Object-Oriented with all code organized by classes. 
+See more info about each class below:
 
 ### Group
 

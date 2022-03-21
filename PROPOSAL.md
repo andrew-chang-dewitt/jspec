@@ -220,7 +220,7 @@ Algorithm
 The program is strictly Object-Oriented with all code organized by classes. 
 A UML diagram is provided here, with more details about each class below it.
 
-[!UML diagram](./uml.svg)
+![UML diagram](./uml.svg)
 
 ### Group
 

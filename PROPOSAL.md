@@ -218,7 +218,9 @@ Algorithm
 ---
 
 The program is strictly Object-Oriented with all code organized by classes. 
-See more info about each class below:
+A UML diagram is provided here, with more details about each class below it.
+
+[!UML diagram](./uml.svg)
 
 ### Group
 

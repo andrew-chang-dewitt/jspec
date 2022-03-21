@@ -144,7 +144,7 @@ Sample output for each part below.
 
 ```
 ================================================================================
-FAILURE: Some group name/description: Some test name/description
+❌ FAILURE: Some group name/description: Some test name/description
 ================================================================================
 
 SomeErrorType: An error message
@@ -159,6 +159,17 @@ or
   Line same
   Line same
 
+--------------------------------------------------------------------------------
+
+Captured stdout: 
+
+Some captured output from System.out.* calls
+More output
+
+--------------------------------------------------------------------------------
+
+Stack trace:
+
 Stack trace output follows last
   Some Method() nn:mm in SomeModule
   Some Method() nn:mm on SomeClass
@@ -169,6 +180,7 @@ Stack trace output follows last
   Some Method() nn:mm in SomeModule
   Some Method() nn:mm on SomeClass
 
+================================================================================
 
 ```
 

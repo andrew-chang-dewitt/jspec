@@ -29,6 +29,7 @@ Aggregates `Group`s & provides methods for running the tests on them then aggreg
 - ResultsTree results
 ---
 + Runner(…Group group) // constructor accdepts an indeterminate number of groups
++ Runner addGroup(Group group) // builder pattern
 + void run() // traverse each Group in this.groups recursively using group.visit() and saving results to a tree on Runner
 + void renderResults(OutputStream outputTarget) // render results to given stream
 ```

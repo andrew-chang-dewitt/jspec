@@ -120,13 +120,61 @@ Flags:
 
 ```
 
+Uses ArgParser & Crawler to parse arguments, then find test Groups.
+Finally, passes found Groups to a Runner & uses it to evaluate the tests & render the results.
+
 UML:
 
 ```
+- Runner runner
+- Crawler crawler
+- ArgParser args
 ---
-+ static void main(String[] args)  // entrypoint driver—parses args into flags & patterns, then initiates test discovery before passing all found Groups to a Runner for evaluation & rendering
-- Groups[] discoverGroups(java.nio.file.PathMatcher? pattern) throws NoTestsFound // discovers root groups using PathMatcher & walkFileTree and pushes found Groups to list to return
-- void evaluateTests(Groups[] groups, File? outFile) // passes groups to Runner, evaluates w/ Runner.run() & renders results to stdout or outFile using Runner.renderResults()
++ static void main(String[] args) // CLI entry point
+- void usageMsg()
+```
+
+ArgParser
+---
+
+Used in CLI.main() to parse arguments.
+Exposes parsed arguments as properties via getters & throws UnknownArg on bad arguments.
+
+```
+- bool verbose
+- File? outFile
+- String pattern 
+---
++ ArgParser()
++ ArgParser arg(String arg) throws UnknownArg
++ File getOutFile()
++ bool getVerbose()
++ String getPattern()
+```
+
+UnknownArg extends Exception
+---
+
+A simple custom Exception to be thrown when a User gives an invalid argument.
+
+```
++ UnknownArg(String arg) // Exception w/ message "Unknown argument: ${ arg }", intended to result in printing of error message, then usage message
+```
+
+Crawler
+---
+
+Encapsulates file tree crawling & searching for test files.
+Takes a given starting point & search pattern on init, then crawls on command.
+Exposes found test Groups property via getter.
+
+```
+- Group[] groups
+- PathMatcher pattern
+---
++ Crawler(File start, String pattern)
++ Crawler crawl() throws NoTestsFound
++ Group[] getGroups()
 ```
 
 NoTestsFound
@@ -136,26 +184,4 @@ A custom Exception to be thrown when no tests are found for the default or given
 
 ```
 + NoTestsFoundString (String pattern) // builds message: "No tests found matching ${pattern}."
-```
-
-ICliOpts
----
-
-An interface defining allowable CLI option arguments & value types.
-
-```
-+ bool verbose
-+ File? outFile
-+ java.nio.file.PathMatcher? pattern // refer to this source for more on using PathMatcher https://javapapers.com/java/glob-with-java-nio/
----
-+ ICliOpts(String[] args) throws UnknownArg // parses an array of strings for allowable args; throws exception on unknown arguments
-```
-
-UnknownArg extends Exception
----
-
-A simple custom Exception to be thrown when a User gives an invalid argument.
-
-```
-+UnknownArg(String arg) // Exception w/ message "Unknown argument: ${ arg }", intended to result in printing of error message, then usage message
 ```

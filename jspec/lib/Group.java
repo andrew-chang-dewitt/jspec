@@ -49,7 +49,7 @@ public class Group {
   private String findDescName(String name, Class<? extends Group> instanceClass) {
     int prefixLength = Group.testPrefix.length();
     String withoutPrefix = name.substring(prefixLength);
-    
+
     try {
       try {
         return (String)instanceClass
@@ -61,5 +61,5 @@ public class Group {
     } catch (NoSuchFieldException exc) {
       return null;
     }
-  } 
+  }
 }

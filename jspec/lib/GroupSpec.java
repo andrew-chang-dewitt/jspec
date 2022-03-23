@@ -43,4 +43,24 @@ public class GroupSpec extends Group {
     
     assert f.visit().get(0).didPass() == false;
   }
+
+  String descDescriptiveGroupName = "A Group can have a more descriptive name";
+  public void testDescriptiveGroupName() {
+    class GroupName extends Group {
+      final String desc = "A descriptive name";
+    }
+
+    GroupName n = new GroupName();
+
+    assert n.desc.compareTo("A descriptive name") == 0;
+  }
+
+  String descDescriptiveGroupNameDefaultNull = "A Group's default descriptive name is null";
+  public void testDescriptiveGroupNameDefaultNull() {
+    class GroupName extends Group {}
+
+    GroupName n = new GroupName();
+
+    assert n.desc == null;
+  }
 }

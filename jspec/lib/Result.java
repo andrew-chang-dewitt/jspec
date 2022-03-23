@@ -5,22 +5,30 @@ import java.util.ArrayList;
 public class Result {
   private boolean pass;
   private Exception exc;
+  private String methodName;
+  private String descName;
 
-  Result() {}
+  Result(String methodName) {
+    this.methodName = methodName;
+  }
+
+  public Result describe(String description) {
+    this.descName = description;
+
+    return this;
+  }
 
   public Result pass() {
-    Result r = new Result();
-    r.pass = true;
+    this.pass = true;
 
-    return r;
+    return this;
   }
 
   public Result fail(Exception exc) {
-    Result r = new Result();
-    r.pass = false;
-    r.exc = exc;
+    this.pass = false;
+    this.exc = exc;
 
-    return r;
+    return this;
   }
 
   public boolean didPass() {
@@ -29,5 +37,13 @@ public class Result {
 
   public Exception getFailureExc() {
     return this.exc;
+  }
+
+  public String getMethodName() {
+    return this.methodName;
+  }
+
+  public String getDescription() {
+    return this.descName;
   }
 }

@@ -9,6 +9,8 @@ import jspec.lib.Result;
 public class Group {
   static String prefix = "test";
 
+  protected String desc = null;
+
   public ArrayList<Result> visit(ArrayList<Result> results) {
     Method[] tests = this.getClass().getDeclaredMethods();
 
@@ -17,11 +19,11 @@ public class Group {
       if (name.startsWith(Group.prefix)) {
         try {
           test.invoke(this);
-          results.add(new Result().pass());
+          results.add(new Result("").pass());
         } catch (InvocationTargetException exc) {
-          results.add(new Result().fail(exc));
+          results.add(new Result("").fail(exc));
         } catch (IllegalAccessException exc) {
-          results.add(new Result().fail(exc));
+          results.add(new Result("").fail(exc));
         }
       }
     }

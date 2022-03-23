@@ -4,8 +4,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
-import jspec.lib.Result;
-
 public class Group {
   static String testPrefix = "test";
   static String descPrefix = "desc";

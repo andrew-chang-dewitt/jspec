@@ -7,23 +7,34 @@ import java.util.ArrayList;
 import jspec.lib.Result;
 
 public class Group {
-  static String prefix = "test";
+  static String testPrefix = "test";
+  static String descPrefix = "desc";
 
   protected String desc = null;
 
   public ArrayList<Result> visit(ArrayList<Result> results) {
-    Method[] tests = this.getClass().getDeclaredMethods();
+    // this.getClass() will return a Group or any descendent of it
+    // using ? extends Group allows for that possibility
+    Class<? extends Group> instanceClass = this.getClass();
+    Method[] tests = instanceClass.getDeclaredMethods();
 
     for (Method test : tests) {
       String name = test.getName();
-      if (name.startsWith(Group.prefix)) {
+      if (name.startsWith(Group.testPrefix)) {
+        Result result = new Result(name);
+        String desc = this.findDescName(name, instanceClass);
+
+        if (desc != null) {
+          result.describe(desc);
+        }
+
         try {
           test.invoke(this);
-          results.add(new Result("").pass());
+          results.add(result.pass());
         } catch (InvocationTargetException exc) {
-          results.add(new Result("").fail(exc));
+          results.add(result.fail(exc));
         } catch (IllegalAccessException exc) {
-          results.add(new Result("").fail(exc));
+          results.add(result.fail(exc));
         }
       }
     }
@@ -36,4 +47,21 @@ public class Group {
   public ArrayList<Result> visit() {
     return this.visit(new ArrayList<Result>());
   }
+
+  private String findDescName(String name, Class<? extends Group> instanceClass) {
+    int prefixLength = Group.testPrefix.length();
+    String withoutPrefix = name.substring(prefixLength);
+    
+    try {
+      try {
+        return (String)instanceClass
+          .getDeclaredField(Group.descPrefix + withoutPrefix)
+          .get(this);
+      } catch (IllegalAccessException exc) {
+        return null;
+      }
+    } catch (NoSuchFieldException exc) {
+      return null;
+    }
+  } 
 }

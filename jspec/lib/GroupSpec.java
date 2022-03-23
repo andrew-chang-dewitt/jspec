@@ -63,4 +63,29 @@ public class GroupSpec extends Group {
 
     assert n.desc == null;
   }
+
+  String descTestMethodName = "A test gives its method name on invocation";
+  public void testTestMethodName() {
+    class MethodName extends Group {
+      public void testATest() {}
+    }
+
+    MethodName m = new MethodName();
+    String actual = m.visit().get(0).getMethodName();
+
+    assert actual.compareTo("testATest") == 0;
+  }
+
+  String descDescriptiveMethodName = "A test method can be given a descriptive name";
+  public void testDescriptiveMethodName() {
+    class MethodName extends Group {
+      String descATest = "a descriptive name";
+      public void testATest() {}
+    }
+
+    MethodName m = new MethodName();
+    String actual = m.visit().get(0).getDescription();
+
+    assert actual.compareTo("a descriptive name") == 0;
+  }
 }

@@ -1,6 +1,8 @@
 package jspec.lib;
 
 public class GroupSpec extends Group {
+  final String desc = "class: Group";
+
   public static void main(String[] args) {
     GroupSpec group = new GroupSpec();
 

@@ -260,6 +260,30 @@ _**Stretch goal:**_
 
 There might be subclasses of `Group` that add some sort of functionality that changes a typical `Group`'s behavior, i.e. asynchronous test execution.
 
+#### Properties
+
+- _protected static String **description**_: a property used to give a better description to a test group, defaults to null if not implemented in a child class 
+
+#### Methods
+
+- _**public static main(String[] args) -> void**_
+
+  Implemented to allow for a very simple use case where a User only writes a test group as a child of Group, then compiles & runs it without having to set up a Runner or use a CLI.
+
+  1. Creates a Runner instance with an instance of this group passed to it.
+  2. Calls the runner's `run()` method to execute the tests.
+
+- Virtual functions:
+
+  The following methods are defined as virtual functions that are all a no-op if not defined in a child class.
+  Each is a method that will be called a different stage of test execution: once before _any_ tests are called, once before _each_ test method is called, once after _each_ test is called, & finally once after _all_ the tests are called.
+  A child class can implement any or all of these to customize some behavior needed for all tests or perform some set-up or tear-down actions.
+
+  - _**public before() -> void**_
+  - _**public beforeEach() -> void**_
+  - _**public afterEach() -> void**_
+  - _**public after() -> void**_
+
 
 ### Runner
 
@@ -283,6 +307,20 @@ class Runner extends Runner {
 ```
 
 The CLI will work by auto-discovering test `Group`s in a directory & subdirectory, then creating a new `Runner` instance & giving all the found `Group`s to the new `Runner`.
+Most likely, the User will never need to implement this class, but it's exposed if they would like to run their tests programmatically.
+
+#### Properties
+
+- _private Group[] **groups**_: stores the groups to be evaluated by this `Runner`
+- _private Tree\<ResultABC\> **results**_: stores the results after the groups are evaluated
+
+#### Methods
+
+- _**public Runner(Group ... groups)**_
+- _**public addGroup(Group group) -> Runner**_
+- _**public run() -> Tree\<ResultABC\>**_
+- _**public renderResults(OutputStream outStream) -> void**_
+- _**private evaluateTest(Method test) -> TestResult**_
 
 
 ### ResultABC

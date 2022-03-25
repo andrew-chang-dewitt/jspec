@@ -7,6 +7,8 @@ A simple unit testing library for TDD & cli for running tests.
 - **Problem solved:** Unit test writing & evaluation.
 - **Technologies needed:** CLI commands, file i/0, & output to stdout
 
+
+
 Use Case Analysis
 ---
 
@@ -74,6 +76,8 @@ Encompasses features for recursively finding all tests in a given directory & ru
 - A User can give a glob pattern to use when searching for spec files, replacing the default `Spec.java` pattern.
 - A User can specify a single test file to run.
 
+
+
 Data design
 ---
 
@@ -120,6 +124,8 @@ On the fly is simple, but might be more difficult to find room for efficiency.
 Alternatively, the `Group` classes & their nested `Group`s could be traversed first, without any execution of their tests.
 This would require building a tree of some sort containing pointers to all the test methods (and possibly other data too like descriptive names or shared state).
 This alternative feels more complex, but might make it easier to execute tests simultaneously & asynchronously for faster total test execution time.
+
+
 
 UI Design
 ---
@@ -226,6 +232,8 @@ No failures:
 15/15 Passed! 
 ```
 
+
+
 Algorithm
 ---
 
@@ -234,13 +242,45 @@ A UML diagram is provided here, with more details about each class below it.
 
 ![UML diagram](./uml.svg)
 
+**OOP Relationships:**
+
+- A User's test definition class inherits from Group
+- A User's test runner class inherits from Runner
+- One Group aggregates zero to many Group
+- One Runner aggregates one to many Group
+- One TestResult inherits from ResultABC
+- One GroupResult inherits from ResultABC
+- One Node<? extends ResultABC> composes one child of ResultAbC
+- One Node\<T\> composes zero to many Node\<T\>
+- One Tree\<T\> composes zero to many Node\<T\>
+- One Runner aggregates one Tree\<ResultAbC\>
+- One CLI aggregates one Runner
+- One Crawler aggregates one to many Group
+- One CLI composes one Crawler
+- One CLI composes one ArgParser
+
+_**Stretch Goal:**_
+
+There might be room to abstract the tree behavior of Runner/Group & Tree/Node into an interface that each pairing implements.
+Both will structure their Nodes slightly differently though:
+
+1. Group discovers child node Groups by calling Class.getDeclaredClasses(), which returns an array of more Group classes.
+  Each sibling Group doesn't have a reference to its other siblings.
+2. Node discovers child node Nodes by accessing the head or tail Child reference, then iterating using the next or previous Sibling references.
+
+This difference leads to any "abstraction" of the tree behavior being mostly limited to a traversal method, but it will have to be at least partially virtual, as both have some differences in their traversal methods.
+
+
 ### Group
 
 A User creates a `Group` of tests by defining a new class that inherits from this class.
-Nested groups are created by defining a member class inside a child of `Group` that also inherits from `Group`.
-Most User stories belonging to the **Definition** group above will be built as features on `Group`.
+Nested groups are created by defining inner classes (that inherit from `Group`) inside a child of `Group`.
+Most User stories belonging to the _**Test Definition**_ group above will be built as features on `Group`.
+
+_**Stretch goal:**_
 
 There might be subclasses of `Group` that add some sort of functionality that changes a typical `Group`'s behavior, i.e. asynchronous test execution.
+
 
 ### Runner
 
@@ -264,3 +304,268 @@ class Runner extends Runner {
 ```
 
 The CLI will work by auto-discovering test `Group`s in a directory & subdirectory, then creating a new `Runner` instance & giving all the found `Group`s to the new `Runner`.
+
+
+### ResultABC
+
+An abstract base class for defining a result value to store in a tree.
+Defining shared properties & one shared method, all used to render the tree of values.
+
+#### Properties
+
+- _private String **codeName**_: the name of the method or class in the test code that this result is from
+- _private String **descName**_: a more descriptive name given to this class or test method, may be null
+
+#### Methods
+
+- _**public toString() -> String[]**_
+
+  Virtual method in ABC.
+  Defined on ABC to guarantee existence, but doesn't implement it.
+  
+  1. Raise `NotImplementedError` if this version is called.
+
+- _**protected getText() -> String[]**_
+
+  1. If `this.descName` is not null, return it
+  2. Else return `this.codeName`
+
+
+### TestResult extends ResultABC
+
+A concrete child of ResultABC.
+Uses Builder Pattern for constructing an instance.
+
+#### Properties
+
+- _bool **pass**_:
+- _Exception **exc**_:
+
+#### Methods
+
+- _**public TestResult(String codeName)**_
+
+  1. Give arg to `this.codeName`
+
+- _**public describe(String description) -> TestResult**_
+  
+  1. Give arg to `this.descName`
+  2. Return `this`
+
+- _**public pass() -> TestResult**_
+
+  1. Set `this.pass` to `true`
+  2. Return `this`
+
+- _**public fail(Exception exc) -> TestResult**_
+
+  1. Set `this.pass` to `false`
+  2. Give arg to `this.exc`
+  3. Return `this`
+
+- _**public toString() -> String[]**_
+
+  1. Get line text using `this.getText`, then append with check or x if passed or failed
+
+
+### GroupResult extends ResultABC
+
+A concrete child of ResultABC.
+
+#### Methods
+
+- _**public toString() -> String[]**_
+
+  1. Get line text using `this.getText`
+
+
+### Node\<T\>
+
+Encapsulates logic for building a tree of nodes.
+
+#### Properties
+
+- _private T **value**_: the actual value object
+- _private Node\<T\> **parent**_: a reference to the parent of this node, will be null if this is a root node
+- _private Node\<T\> **headChild**_: a reference to one end of the list of child nodes (child nodes are represented as a doubly linked list), will be null if this is a leaf node
+- _private Node\<T\> **tailChild**_: a reference to the other end of the list of child nodes (child nodes are represented as a doubly linked list), will be null if this is a leaf node
+- _private Node\<T\> **nextSibling**_: a reference to the next sibling of this node (siblings a linked list), will be null if this is the tail child
+- _private Node\<T\> **prevSibling**_: a reference to the previous sibling of this node (siblings a linked list), will be null if this is the head child
+
+#### Methods
+
+- _**public Node\<T\>(T value)**_
+
+  1. Assign `value` to `this.value`
+
+
+- Builder pattern:
+
+  These methods all implement a Builder Pattern for creating new nodes.
+  First the creator calls the constructor with the desired value, then sets any parent, child, or sibling nodes using the appropriate method below.
+  These method calls can be chained, as they all return the instance of `Node<T>` after adding the given parent/child/sibling node.
+
+  - _**public addParent(Node\<T\> node) -> Node\<T\>**_
+  - _**public addHeadChild(Node\<T\> node) -> Node\<T\>**_
+  - _**public addTailChild(Node\<T\> node) -> Node\<T\>**_
+  - _**public addNextSibling(Node\<T\> node) -> Node\<T\>**_
+  - _**public addPrevSibling(Node\<T\> node) -> Node\<T\>**_
+
+- Getters:
+
+  These methods are all simple getters for the associated private property.
+
+  - _**public getParent() -> Node\<T\>**_
+  - _**public getHeadChild() -> Node\<T\>**_
+  - _**public getTailChild() -> Node\<T\>**_
+  - _**public getNextSibling() -> Node\<T\>**_
+  - _**public getPrevSibling() -> Node\<T\>**_
+
+- Setters: There is currently no use case where setters will be needed as the Results Tree is build & never modified. 
+
+
+### Tree\<T\>
+
+Encapsulates logic for traversing a tree & a reference to the root node.
+In this use case, there's a likely possibility that there's multiple trees, but its simpler to store them as though they are one tree with multiple root nodes.
+This implementation stores the multiple root nodes as a linked list with references to the head root & tail root.
+
+#### Properties
+
+- _private Node\<T\> **headRoot**_
+- _private Node\<T\> **tailRoot**_
+
+#### Methods
+
+- _**public Tree\<T\>(Node\<T\> headRoot) -> Tree\<T\>**_
+- _**public Tree\<T\>(Node\<T\> headRoot, Node\<T\> tailRoot) -> Tree\<T\>**_
+- _**public preorder(FnICallback cb) -> void**_
+- _**public addNode(
+\    Node\<T\> node,
+\    Node\<T\> parent,
+\    Node\<T\> headChild,
+\    Node\<T\> tailChild,
+\    Node\<T\> nextSibling,
+\    Node\<T\> prevSibling
+\  ) -> Tree\<T\>**_
+
+_**Note:**_ While there could be methods implemented for inserting nodes in existing tree structures ()or removing nodes), there's no use case yet for this functionality so it'd be a waste of time to build them at this time.
+
+
+### Crawler
+
+Encapsulates logic for crawling the project file tree for test definition files & getting the defined `Group` descendants from them.
+
+
+### ArgParser
+
+Encapsulates logic for parsing Strings as arguments.
+
+#### Properties
+
+- _private java.io.File? **outfile**_: a file to output results to, if given
+- _private java.nio.file.PathMatcher **pattern**_: a search pattern to use when looking for test definition files, defaults to "./\*\*/\*Spec.java"
+- _private bool **verbose**_: will render verbose output, if true; defaults to false
+
+#### Methods
+
+- _**public ArgParser()**_
+  
+  No-argument constructor—inherited from Object.
+  Instances are to be build using Builder Pattern (e.g. `CLI cli = CLI().some_method().maybe_another_method()`).
+
+- _**public arg(String argument) -> ArgParser**_
+
+  Add an argument to the parser.
+  
+  1. Check if argument starts with one dash or two.
+    - if one, dispatch to `this.shortFlag()`
+    - else if two, dispatch to `this.longFlag()`
+    - else dispatch to `this.addPattern()`
+
+- _**private shortFlag(String arg) -> CLI**_
+
+  Handle parsing & adding short flags.
+
+  1. Remove single dash from front of string (i.e. "-text" becomes "text").
+  2. Split string on "=" character; assign first part to `flag` & second to `value`.
+  3. Switch on `flag` with `EShortFlag` enum
+    - case "o": dispatch `value` to `this.addOutFile()` 
+    - case "p": dispatch `value` to `this.addPattern()` 
+    - case "v": dispatch `true` to `this.addVerbose()` 
+
+- _**private longFlag(String arg) -> CLI**_
+
+  Handle parsing & adding long flags.
+
+  1. Remove double dash from front of string (i.e. "--text" becomes "text").
+  2. Split string on "=" character; assign first part to `flag` & second to `value`.
+  3. Switch on `flag` with `EShortFlag` enum
+    - case "outFile": dispatch `value` to `this.addOutFile()` 
+    - case "pattern": dispatch `value` to `this.addPattern()` 
+    - case "verbose": dispatch `true` to `this.addVerbose()` 
+
+- _**private addOutFile(String pathname) -> CLI**_
+
+  1. Create new `File` from given `pathname` & give to `this.outFile`
+
+- _**private addPattern(String glob) -> CLI**_
+
+  1. Prepend given glob with syntax identifier, "glob:" & give to `prepended`
+  2. Try to create a new PathMatcher object using prepended glob `FileSystems.getDefault().getPathMatcher(prepended)` and give to `this.pattern`
+    - catch `java.util.regex.PatternSyntaxException`: throw `BadPattern`
+
+- _**private addVerbose(bool arg) -> CLI**_
+
+  1. Set `this.verbose` equal to given value
+
+
+### CLI
+
+Main entry point for the command line interface program.
+Encapsulates logic to receive commands & arguments, then dispatches commands & composes results accordingly.
+
+#### Properties
+
+- _ArgParser **args**_
+- _Crawler **crawler**_
+- _Runner **runner**_
+
+#### Methods
+
+_**public static main(String[] args) -> void**_
+
+  1. Initialize an instance of `ArgParser` & give it to `this.args`
+  2. Iterate over `args` array, giving each one to `this.args` to be processed using `ArgParser.arg()`
+    - if `UnknownArg` or `BadPattern` is thrown, exit program & display error to user
+  3. Get the PWD from `System.getProperty("user.dir")`
+  4. Initialize an instance of `Crawler` with the PWD & the pattern from `this.args.getPattern()` & give the new instance to `this.crawler`
+  5. Discover test groups using `this.crawler`'s method `Crawler.crawl()`
+    - if `NoTestsFound` is thrown, exit program & display error to user
+  6. Initialize an instance of `Runner` & give it to `this.runner`
+  7. Give each `Group` found by `this.crawler` to `this.runner` using `Crawler.getGroups()` & iterating over the result, calling `Runner.addGroup()` on each `Group`
+  8. Run the tests using `Runner.run()`
+  9. Render the results to the user
+
+
+
+240 Concepts Used
+---
+
+**OOP:**
+
+- Inheritence
+- Encapsulation
+- Polymorphism
+- Abstraction
+
+**Data structures:**
+
+- ArrayList
+- Linked Lists
+- Trees
+
+**Algorithms:**
+
+- preorder tree traversal
+- _**stretch goal:**_ some sort of sorting algo (for sorting tests/results?)

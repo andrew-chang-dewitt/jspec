@@ -29,7 +29,7 @@ Encompasses features that are used to write, group, set up, & tear down tests.
 - A User can define code that needs to be run once after executing a group of tests by defining a method called `after`.
 - A User can define code that needs to be run after each test in a group of tests by defining a method called `afterEach`.
 
-#### Some thoughts on assertions
+#### _**Stretch goal:**_ Improved assertions
 
 I'd like to have some features that are used to manage assertions.
 It'd be nice to keep them simple (using basic `assert` keyword & assoc. syntax), but grant some nice features around the error messaging on failure.
@@ -103,27 +103,6 @@ Data design
   In both cases, the `Runner` will provide two options for adding `Group`s: via the `Runner()` constructor during initialization, or by calling the `Runner.addGroup()` method after initialization.
   Internally, the `Runner` will aggregate `Group`s in an array or vector.
   During test evaluation, the collection will be traversed & the `Group`s will be inspected using `java.lang.reflect` APIs to discover all test methods & any nested `Group`s. As tests & test groups are discovered they could either be evaluated immediately, or have references to them stored in a tree that will later be traversed for the actual evaluation of each test.
-
-### Notes/Thoughts on Data Design:
-
-So far, I think there's a few obvious conclusions about how the solution might work.
-
-1. There's 3 separate parts here: a `Group` (& its contained tests/sub-groups), a `Runner`, & a CLI.
-  A CLI requires a `Runner` & a `Runner` requires at least one `Group`, but a `Group` doesn't need to know anything about the `Runner` & the `Runner` doesn't need to know anything about the CLI.
-2. A `Runner` may execute tests contained in multiple `Group`s, so it will need to know how to organize them & what order (if any) to do the tests in.
-3. There's no need for data permanence, as tests are simply functions.
-  If the test-writer needs the test to work with any data, that is a separate problem that will need to be solved by the writer.
-
-Point 2 implies a 1:many `Group`:`Runner` relationship & point 1 implies a 1:1 CLI:`Runner` relationship.
-Given the 1:many `Group`:`Runner` relationship, there will need to be some sort of collection on `Runner` to hold the aggregation of `Group`s.
-Additionally, the `Runner` will need to not only execute all the tests belonging to a given `Group`, but also all the tests belonging to any nested `Group`s, which can contain nested `Group`s of their own, continuing to an arbitrary depth.
-
-These relationships & the need for a traversal of unknown breadth & depth probably lead to a recursive algorithm.
-This could either happen on the fly as the tree of test `Group`s is traversed using `Class.getMethods()` & `Class.getClasses()`.
-On the fly is simple, but might be more difficult to find room for efficiency.
-Alternatively, the `Group` classes & their nested `Group`s could be traversed first, without any execution of their tests.
-This would require building a tree of some sort containing pointers to all the test methods (and possibly other data too like descriptive names or shared state).
-This alternative feels more complex, but might make it easier to execute tests simultaneously & asynchronously for faster total test execution time.
 
 
 

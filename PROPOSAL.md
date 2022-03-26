@@ -273,6 +273,31 @@ There might be subclasses of `Group` that add some sort of functionality that ch
   1. Creates a Runner instance with an instance of this group passed to it.
   2. Calls the runner's `run()` method to execute the tests.
 
+- _**public visit() -> IGroupVisitResult**_
+
+  1. Initialize empty ArrayList\<TestResult\>
+  2. Get all methods on this instance of Group using `this.getClass().getDeclaredMethods()`
+  3. Call `this.before()`
+  4. Iterate over methods:
+    1. If method begins with "test"
+      1. Call `this.beforeEach()`
+      2. pass to `this.evaluateTest()` & add returned Result to ArrayList
+      3. Call `this.afterEach()`
+    2. Else do nothing with it
+  5. Call `this.after()`
+  6. Get all inner classes on this instance of Group using `this.getClass().getDeclaredClasses()` & filter by those that are an instance of `Group`
+  7. Return new `IGroupVisitResult` containing the lsit of test results & the list of child `Group`s
+
+- _**private evaluateTest(Method test) -> TestResult**_
+
+  1. Get test method's declared name using `test.getName()`
+  2. Create new `Result` with test method's declared name
+  3. Get descriptive name using `this.getDescName()` with the declared name
+  4. If descriptive name is not null, add to `Result` with method `describe()`
+  5. Try to invoke the test method, then mark `Result` as passed with method `pass()` & return the passed `Result`
+    1. Catch any InvocationTargetException or IllegalAccessException & add to `Result` by passing the exception to it's `fail()` method
+    2. Return the failed result
+
 - Virtual functions:
 
   The following methods are defined as virtual functions that are all a no-op if not defined in a child class.
@@ -283,6 +308,16 @@ There might be subclasses of `Group` that add some sort of functionality that ch
   - _**public beforeEach() -> void**_
   - _**public afterEach() -> void**_
   - _**public after() -> void**_
+
+
+### IGroupVisitResult
+
+A simple interface to structure the return type of `Group.visit()`
+
+#### Properties
+
+- _ArrayList\<TestResult\> **testResults**_: the results of tests belonging to the Group that was visited
+- _Group[] **children**_: An array of child Groups that have yet to be processed
 
 
 ### Runner
@@ -311,16 +346,60 @@ Most likely, the User will never need to implement this class, but it's exposed 
 
 #### Properties
 
-- _private Group[] **groups**_: stores the groups to be evaluated by this `Runner`
+- _private ArrayList\<Group\> **groups**_: stores the groups to be evaluated by this `Runner`
 - _private Tree\<ResultABC\> **results**_: stores the results after the groups are evaluated
 
 #### Methods
 
 - _**public Runner(Group ... groups)**_
+
+  1. Iterate over arg, passing each one to `this.groups.add()`
+
 - _**public addGroup(Group group) -> Runner**_
+
+  1. Add to `this.groups` using `ArrayList::add()`.
+
 - _**public run() -> Tree\<ResultABC\>**_
+
+  1. Create an empty `Tree` of `GroupResult`s
+  2. Iterate over `this.groups`, calling `this.processGroup` for each one & adding the resulting `Node<GroupResult>` to the `Tree` as a root using `Tree::addRoot`
+  3. Return the `Tree`
+
+- _**private processGroup(Group group) -> Node\<GroupResult\>**_
+    1. Create a new `Node<GroupResult>` called `newNode` with the `group`'s declared name
+    2. Add the `Group`'s descriptive name by getting `Group.description` & passing it to `GroupResult.describe()`
+    3. Call the `visit()` method on the group
+    4. Iterate over the `testResults` property of the returned object, doing the following for each one:
+      1. Call `this.buildTestResultNode()`
+      2. Pass the `Node<GroupResult>` as the parent node & the previous test result as the previous sibling node (if it exists) & if the current result is the last one of the list as `isLastChild`
+    5. If returned object's `children` property is not null, iterate over it, calling `this.processGroup` on each one, adding the returned node as a child to `newNode` using `Node::addTailChild`
+    6. Else, return the `newNode`
+
+- _**private buildTestResultNode(
+\    TestResult result,
+\    Node\<GroupResult\> parent, 
+\    Node\<TestResult\> prevSibling,
+\    bool isLastChild,
+  ) -> Node\<TestResult\>**_
+
+  1. Create a new `Node<TestResult>` giving `result` as the value
+  2. Add `parent` using `Node::addParent()`
+  3. If `prevSibling` is not null
+    1. Add `prevSibling` using `Node::addPrevSibling`
+    2. Add new node as the next Sibling for the previous node using `Node::nextSibling`
+  4. Else add new node as `headChild` to parent node using `Node::addHeadChild()`
+  5. If `isLastChild` is true, add new node as `tailChild` to parent node using `Node::addTailChild()`
+  6. Return new node
+
 - _**public renderResults(OutputStream outStream) -> void**_
-- _**private evaluateTest(Method test) -> TestResult**_
+
+  1. Create an empty ArrayList\<String\>
+  2. Call the `preorder()` method on `this.results`, giving it a lambda callback that: 
+    1. Call the `toString()` method of each node
+    2. Prefix it with a string spaces with a length equal to 2 multiplied by the depth of the node
+    3. Add the prefixed string to the ArrayList created at the beginning
+  3. Iterate over the ArrayList, passing each String to `System.out.println()`
+
 
 
 ### ResultABC
@@ -454,9 +533,10 @@ This implementation stores the multiple root nodes as a linked list with referen
 
 #### Methods
 
-- _**public Tree\<T\>(Node\<T\> headRoot) -> Tree\<T\>**_
-- _**public Tree\<T\>(Node\<T\> headRoot, Node\<T\> tailRoot) -> Tree\<T\>**_
+- _**public Tree\<T\>() -> Tree\<T\>**_
+
 - _**public preorder(FnICallback cb) -> void**_
+
 - _**public addNode(
 \    Node\<T\> node,
 \    Node\<T\> parent,

@@ -28,6 +28,55 @@ public class DoublyLinkedList<T> {
     }, 0);
   }
 
+  public Node<T> get(int index) {
+    return this.reduce((a, x, i) -> {
+      if (i == index) return x;
+      else return a;
+    }, null);
+  }
+
+  public Node<T> replace(Node<T> node, int index) {
+    Node<T> replaced = this.get(index);
+    Node<T> prev = replaced.getPrevSibling();
+    Node<T> next = replaced.getNextSibling();
+
+    if (prev == null) {
+      this.head = node;
+    } else {
+      prev.addNextSibling(node);
+      node.addPrevSibling(prev);
+    }
+
+    if (next == null){
+      this.tail = node;
+    } else {
+      node.addNextSibling(next);
+      next.addPrevSibling(node);
+    }
+
+    return replaced;
+  }
+
+  public Node<T> delete(int index) {
+    Node<T> deleted = this.get(index);
+    Node<T> prev = deleted.getPrevSibling();
+    Node<T> next = deleted.getNextSibling();
+
+    if (prev == null) {
+      this.head = next;
+    } else {
+      prev.addNextSibling(next);
+    }
+
+    if (next == null){
+      this.tail = prev;
+    } else {
+      next.addPrevSibling(prev);
+    }
+
+    return deleted;
+  }
+
   public <U> U reduce(ReduceCallback<T, U> cb, U initialValue) {
     return this.reducer(cb, initialValue, this.head, 0);
   }
@@ -39,7 +88,7 @@ public class DoublyLinkedList<T> {
       cb, 
       cb.cb(currentValue, currentNode, currentIndex), 
       currentNode.getNextSibling(), 
-      currentIndex++);
+      ++currentIndex);
   }
 
   public void forEach(ForEachCallback<T> cb, boolean reverse) {

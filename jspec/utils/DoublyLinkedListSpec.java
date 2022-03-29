@@ -45,6 +45,8 @@ public class DoublyLinkedListSpec extends Group {
     assert l.getTail() == o;
   }
 
+  // FIXME: needs edge cases tested
+  // 1. loop empty list
   public String descListIsIterable = "A list can be iterated over";
   public void testListIsIterable() {
     Node<String> n = new Node<String>("a value");
@@ -73,6 +75,8 @@ public class DoublyLinkedListSpec extends Group {
     }, true);
   }
 
+  // FIXME: needs edge cases tested
+  // 1. reduce empty list
   public String descReduce = "A list can be reduced";
   public void testReduce() {
     Node<String> n = new Node<String>("a value");
@@ -95,6 +99,9 @@ public class DoublyLinkedListSpec extends Group {
     });
   }
 
+  // FIXME: needs edge cases tested
+  // 1. get length of empty list
+  // 2. get length of very long list
   public String descListLength = "A list knows its length";
   public void testListLength() {
     Node<String> n = new Node<String>("a value");
@@ -107,6 +114,8 @@ public class DoublyLinkedListSpec extends Group {
     assert actual == expected : actual + " != " + expected;
   }
 
+  // FIXME: needs edge cases tested:
+  // 1. append to empty list
   public String descAppendNode = "A new node can be appended to the list";
   public void testAppendNode() {
     Node<String> n = new Node<String>("a value");
@@ -126,6 +135,8 @@ public class DoublyLinkedListSpec extends Group {
     assert actualLength == expectedLength : actualLength + " != " + expectedLength;
   }
 
+  // FIXME: needs edge cases tested:
+  // 1. prepend to empty list
   public String descPrependNode = "A new node can be prepended to the list";
   public void testPrependNode() {
     Node<String> n = new Node<String>("a value");
@@ -143,5 +154,55 @@ public class DoublyLinkedListSpec extends Group {
     int actualLength = l.getLength();
     int expectedLength = 3;
     assert actualLength == expectedLength : actualLength + " != " + expectedLength;
+  }
+
+  // FIXME: needs edge cases tested:
+  // 1. get index > length - 1
+  // 2. get negative index
+  public String descGetNodeAtIndex = "A node can be fetched by its index";
+  public void testGetNodeAtIndex() {
+    Node<String> n = new Node<String>("a value");
+    Node<String> o = new Node<String>("a value").addPrevSibling(n);
+    DoublyLinkedList<String> l = new DoublyLinkedList<String>(n, o);
+
+    Node<String> actual = l.get(1);
+    assert actual == o : actual + " != " + o;
+  }
+
+  // FIXME: needs edge cases tested:
+  // 1. replace head
+  // 2. replace tail
+  // 3. replace only remaining node
+  public String descReplaceNodeAtIndex = "A node at a given index can be replaced";
+  public void testReplaceNodeAtIndex() {
+    Node<String> n = new Node<String>("a value");
+    Node<String> o = new Node<String>("a value").addPrevSibling(n);
+    DoublyLinkedList<String> l = new DoublyLinkedList<String>(n, o);
+
+    Node<String> p = new Node<String>("a value");
+
+    Node<String> returnedNode = l.replace(p, 1);
+    Node<String> nodeAtOne = l.get(1);
+
+    assert nodeAtOne == p : nodeAtOne + " != " + p;
+    assert returnedNode == o : returnedNode + " != " + o;
+  }
+
+  // FIXME: needs edge cases tested:
+  // 1. delete head
+  // 2. delete tail
+  // 3. delete only remaining node
+  public String descDeleteNodeAtIndex = "A node at a given index can be deleted";
+  public void testDeleteNodeAtIndex() {
+    Node<String> n = new Node<String>("a value");
+    Node<String> o = new Node<String>("a value").addPrevSibling(n);
+    Node<String> p = new Node<String>("a value").addPrevSibling(o);
+    DoublyLinkedList<String> l = new DoublyLinkedList<String>(n, p);
+
+    Node<String> returnedNode = l.delete(1);
+    Node<String> nodeAtOne = l.get(1);
+
+    assert nodeAtOne == p : nodeAtOne + " != " + p;
+    assert returnedNode == o : returnedNode + " != " + o;
   }
 }

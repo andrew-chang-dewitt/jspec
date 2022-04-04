@@ -16,7 +16,7 @@ public class GroupSpec extends Group {
     assert true;
   }
 
-  String descFindsAllTests = "Any method beginning with 'test' will be evaluated.";
+  public String descFindsAllTests = "Any method beginning with 'test' will be evaluated.";
   public void testFindsAllTests() {
     class Multiple extends Group {
       public void testOne() {
@@ -42,7 +42,7 @@ public class GroupSpec extends Group {
     }
 
     Failure f = new Failure();
-    
+
     assert f.visit().get(0).didPass() == false;
   }
 

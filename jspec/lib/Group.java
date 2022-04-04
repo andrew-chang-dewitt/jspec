@@ -51,13 +51,11 @@ public class Group {
     String withoutPrefix = name.substring(prefixLength);
 
     try {
-      try {
-        return (String)instanceClass
-          .getDeclaredField(Group.descPrefix + withoutPrefix)
-          .get(this);
-      } catch (IllegalAccessException exc) {
-        return null;
-      }
+      return (String)instanceClass
+        .getDeclaredField(Group.descPrefix + withoutPrefix)
+        .get(this);
+    } catch (IllegalAccessException exc) {
+      return null;
     } catch (NoSuchFieldException exc) {
       return null;
     }

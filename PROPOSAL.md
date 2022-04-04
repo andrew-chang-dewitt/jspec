@@ -1,7 +1,11 @@
 JSpec testing library
 ===
 
-A simple unit testing library for TDD & cli for running tests.
+A final project by Andrew Chang-DeWitt for CSCI 24000 at IUPUI, Spring 2022.
+
+_**Note**_: See a maintained version of this proposal document [on GitHub at andrew-chang-dewitt/jspec/blob/main/PROPOSAL.md](https://github.com/andrew-chang-dewitt/jspec/blob/main/PROPOSAL.md) for the most up to date version.
+
+A simple unit testing library for TDD & a cli for running tests.
 
 - **Intended User:** Java developers to write & evaluate unit tests.
 - **Problem solved:** Unit test writing & evaluation.
@@ -666,3 +670,8 @@ _**public static main(String[] args) -> void**_
 
 - preorder tree traversal
 - _**stretch goal:**_ some sort of sorting algo (for sorting tests/results?)
+
+
+
+
+© Andrew Chang-DeWitt 2022

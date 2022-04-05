@@ -1,5 +1,6 @@
 package jspec.lib;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -10,12 +11,29 @@ public class Group {
 
   protected String desc = null;
 
-  public ArrayList<Result> visit(ArrayList<Result> results) {
+  public VisitResults visit(ArrayList<Result> results) {
     // this.getClass() will return a Group or any descendent of it
     // using ? extends Group allows for that possibility
     Class<? extends Group> instanceClass = this.getClass();
     Method[] tests = instanceClass.getDeclaredMethods();
+    Class<?>[] nestedClasses = instanceClass.getDeclaredClasses();
 
+    return new VisitResults(
+        this.evaluate(results, tests, instanceClass), 
+        this.findChildren(nestedClasses, this));
+  }
+
+  // overload w/ default value of empty Results collection
+  // when not given one
+  public VisitResults visit() {
+    return this.visit(new ArrayList<Result>());
+  }
+
+  private ArrayList<Result> evaluate(
+    ArrayList<Result> outResults, 
+    Method[] tests,
+    Class<? extends Group> instanceClass
+  ) {
     for (Method test : tests) {
       String name = test.getName();
       if (name.startsWith(Group.testPrefix)) {
@@ -28,22 +46,44 @@ public class Group {
 
         try {
           test.invoke(this);
-          results.add(result.pass());
+          outResults.add(result.pass());
         } catch (InvocationTargetException exc) {
-          results.add(result.fail(exc));
+          outResults.add(result.fail(exc));
         } catch (IllegalAccessException exc) {
-          results.add(result.fail(exc));
+          outResults.add(result.fail(exc));
         }
       }
     }
 
-    return results;
+    return outResults;
   }
 
-  // overload w/ default value of empty Results collection
-  // when not given one
-  public ArrayList<Result> visit() {
-    return this.visit(new ArrayList<Result>());
+  private ArrayList<Group> findChildren(Class<?>[] nested, Group parent) {
+    ArrayList<Group> children = new ArrayList<Group>();
+
+    for (Class<?> c : nested) {
+      if (Group.class.isAssignableFrom(c)) {
+        try {
+          Constructor<?> constructor = c.getDeclaredConstructor(parent.getClass());
+          Group group = (Group)constructor.newInstance(parent);
+          children.add(group);
+        } catch (IllegalAccessException exc) {
+          System.err.println("Error executing constructor on class: " + c);
+          System.err.println(exc);
+        } catch (InvocationTargetException exc) {
+          System.err.println("Error executing constructor on class: " + c);
+          System.err.println(exc);
+        } catch (InstantiationException exc) {
+          System.err.println("Error executing constructor on class: " + c);
+          System.err.println(exc);
+        } catch (NoSuchMethodException exc) {
+          System.err.println("Error executing constructor on class: " + c);
+          System.err.println(exc);
+        }
+      }
+    }
+
+    return children;
   }
 
   private String findDescName(String name, Class<? extends Group> instanceClass) {
@@ -59,5 +99,23 @@ public class Group {
     } catch (NoSuchFieldException exc) {
       return null;
     }
+  }
+}
+
+class VisitResults {
+  private ArrayList<Group> children;
+  private ArrayList<Result> results;
+
+  VisitResults(ArrayList<Result> results, ArrayList<Group> children) {
+    this.children = children;
+    this.results = results;
+  }
+
+  public ArrayList<Group> getChildren() {
+    return this.children;
+  }
+
+  public ArrayList<Result> getResults() {
+    return this.results;
   }
 }

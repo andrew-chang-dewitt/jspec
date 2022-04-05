@@ -1,14 +1,22 @@
 package jspec.lib;
 
+import java.util.ArrayList;
+
 public class GroupSpec extends Group {
   final String desc = "class: Group";
 
   public static void main(String[] args) {
-    GroupSpec group = new GroupSpec();
+    GroupSpec spec = new GroupSpec();
 
-    group
+    spec
       .visit()
-      .forEach(result -> System.out.println("result: " + result.didPass()));
+      .getResults()
+      .forEach(result -> System.out.println(
+        result.getDescription() +
+        " " +
+        (result.didPass()
+          ? "✅"
+          : "❌")));
   }
 
   String descTestDefinition = "A test is defined by declaring a method with the prefix 'test'";
@@ -30,7 +38,7 @@ public class GroupSpec extends Group {
 
     Multiple m = new Multiple();
 
-    assert m.visit().size() == 2;
+    assert m.visit().getResults().size() == 2;
   }
 
   String descTestFailure = "Evaluating a test captures failed assertions & alerts the user of a failed test";
@@ -43,7 +51,7 @@ public class GroupSpec extends Group {
 
     Failure f = new Failure();
 
-    assert f.visit().get(0).didPass() == false;
+    assert f.visit().getResults().get(0).didPass() == false;
   }
 
   String descDescriptiveGroupName = "A Group can have a more descriptive name";
@@ -73,7 +81,7 @@ public class GroupSpec extends Group {
     }
 
     MethodName m = new MethodName();
-    String actual = m.visit().get(0).getMethodName();
+    String actual = m.visit().getResults().get(0).getMethodName();
 
     assert actual.compareTo("testATest") == 0;
   }
@@ -86,8 +94,45 @@ public class GroupSpec extends Group {
     }
 
     MethodName m = new MethodName();
-    String actual = m.visit().get(0).getDescription();
+    String actual = m.visit().getResults().get(0).getDescription();
 
     assert actual.compareTo("a descriptive name") == 0;
+  }
+
+  String descVisitReturnsResults = "Visiting a group returns the results of each test";
+  public void testVisitReturnsResults() {
+    class Example extends Group {
+      public void testA() {
+        assert true;
+      }
+      public void testB() {
+        assert true;
+      }
+      public void testF() {
+        assert false;
+      }
+    }
+
+    Example g = new Example();
+    ArrayList<Result> results = g.visit().getResults();
+
+    assert results.get(0).didPass() : "first test passes";
+    assert results.get(1).didPass() : "second test passes";
+    assert !results.get(2).didPass() : "third test fails";
+  }
+
+  String descVisitReturnsNestedGroups = "Visiting a group also returns any nested Groups";
+  public void testVisitReturnsNestedGroups() {
+    class Example extends Group {
+      class Nested extends Group {}
+    }
+
+    Example g = new Example();
+    ArrayList<Group> children = g.visit().getChildren();
+
+    assert children instanceof ArrayList
+      : "children should be an array list";
+    assert children.get(0) instanceof Group
+      : "members of children should be additional groups";
   }
 }

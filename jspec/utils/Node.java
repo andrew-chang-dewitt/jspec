@@ -4,6 +4,9 @@ public class Node<T> {
   private T value;
   private Node<T> nextSibling;
   private Node<T> prevSibling;
+  private Node<T> parent;
+  private Node<T> headChild;
+  private Node<T> tailChild;
 
   public Node(T value) {
     this.value = value;
@@ -39,5 +42,35 @@ public class Node<T> {
 
   public Node<T> getPrevSibling() {
     return this.prevSibling;
+  }
+
+  public Node<T> addParent(Node<T> parent) {
+    this.parent = parent;
+
+    return this;
+  }
+
+  public Node<T> getParent() {
+    return this.parent;
+  }
+
+  public Node<T> addHeadChild(Node<T> headChild) {
+    this.headChild = headChild;
+
+    return this;
+  }
+
+  public Node<T> getHeadChild() {
+    return this.headChild;
+  }
+
+  public Node<T> addTailChild(Node<T> tailChild) {
+    this.tailChild = tailChild;
+
+    return this;
+  }
+
+  public Node<T> getTailChild() {
+    return this.tailChild;
   }
 }

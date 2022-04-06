@@ -4,6 +4,11 @@ public class DoublyLinkedList<T> {
   Node<T> head;
   Node<T> tail;
 
+  public DoublyLinkedList() {
+    this.head = null;
+    this.tail = null;
+  }
+
   public DoublyLinkedList(Node<T> node) {
     this.head = node;
     this.tail = node;
@@ -81,7 +86,12 @@ public class DoublyLinkedList<T> {
     return this.reducer(cb, initialValue, this.head, 0);
   }
 
-  private <U> U reducer(ReduceCallback<T, U> cb, U currentValue, Node<T> currentNode, int currentIndex) {
+  private <U> U reducer(
+    ReduceCallback<T, U> cb, 
+    U currentValue, 
+    Node<T> currentNode, 
+    int currentIndex
+  ) {
     if (currentNode == null) return currentValue;
     
     return reducer(
@@ -89,6 +99,12 @@ public class DoublyLinkedList<T> {
       cb.cb(currentValue, currentNode, currentIndex), 
       currentNode.getNextSibling(), 
       ++currentIndex);
+  }
+
+  public boolean contains(Node<T> node) {
+    return this.reduce((acc, current, idx) -> {
+      return acc || current == node;
+    }, false);
   }
 
   public void forEach(ForEachCallback<T> cb, boolean reverse) {
@@ -118,12 +134,22 @@ public class DoublyLinkedList<T> {
   }
 
   public void append(Node<T> node) {
-    this.tail.addNextSibling(node);
+    if (this.tail != null) {
+      this.tail.addNextSibling(node);
+    } else {
+      this.head = node;
+    }
+
     this.tail = node;
   }
 
   public void prepend(Node<T> node) {
-    this.head.addPrevSibling(node);
+    if (this.head != null) {
+      this.head.addPrevSibling(node);
+    } else {
+      this.tail = node;
+    }
+
     this.head = node;
   }
 }

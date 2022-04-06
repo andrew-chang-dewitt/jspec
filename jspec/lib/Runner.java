@@ -23,7 +23,7 @@ public class Runner {
 
   public ArrayList<Result> run() {
     this.results = new ArrayList<Result>();
-    groups.forEach(group -> this.results.addAll(group.visit()));
+    this.groups.forEach(group -> this.results.addAll(group.visit()));
 
     return this.results;
   }

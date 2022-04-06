@@ -10,6 +10,7 @@ public class DoublyLinkedListSpec extends Group {
 
     spec
       .visit()
+      .getResults()
       .forEach(result -> {
         System.out.println(
             result.getDescription() +
@@ -43,6 +44,14 @@ public class DoublyLinkedListSpec extends Group {
 
     assert l.getHead() == n;
     assert l.getTail() == o;
+  }
+
+  public String descCreatingAsEmpty = "Creating a list as empty sets head & tail as null";
+  public void testCreatingAsEmpty() {
+    DoublyLinkedList<String> l = new DoublyLinkedList<String>();
+
+    assert l.getHead() == null;
+    assert l.getTail() == null;
   }
 
   // FIXME: needs edge cases tested
@@ -135,6 +144,25 @@ public class DoublyLinkedListSpec extends Group {
     assert actualLength == expectedLength : actualLength + " != " + expectedLength;
   }
 
+  public String descAppendToEmpty = "A node can be appended to an empty list";
+  public void testAppendToEmpty() {
+    DoublyLinkedList<String> l = new DoublyLinkedList<String>();
+
+    Node<String> p = new Node<String>("a value");
+    l.append(p);
+
+    // head & tail both become newly appended node
+    Node<String> actualHead = l.getHead();
+    assert actualHead == p : actualHead + " != " + p;
+    Node<String> actualTail = l.getTail();
+    assert actualTail == p : actualTail + " != " + p;
+
+    // length increases from 0 to 1
+    int actualLength = l.getLength();
+    int expectedLength = 1;
+    assert actualLength == expectedLength : actualLength + " != " + expectedLength;
+  }
+
   // FIXME: needs edge cases tested:
   // 1. prepend to empty list
   public String descPrependNode = "A new node can be prepended to the list";
@@ -153,6 +181,25 @@ public class DoublyLinkedListSpec extends Group {
     // length increases from 2 to 3
     int actualLength = l.getLength();
     int expectedLength = 3;
+    assert actualLength == expectedLength : actualLength + " != " + expectedLength;
+  }
+
+  public String descPrependToEmpty = "A node can be prepended to an empty list";
+  public void testPrependToEmpty() {
+    DoublyLinkedList<String> l = new DoublyLinkedList<String>();
+
+    Node<String> p = new Node<String>("a value");
+    l.prepend(p);
+
+    // head & tail both become newly prepended node
+    Node<String> actualHead = l.getHead();
+    assert actualHead == p : actualHead + " != " + p;
+    Node<String> actualTail = l.getTail();
+    assert actualTail == p : actualTail + " != " + p;
+
+    // length increases from 0 to 1
+    int actualLength = l.getLength();
+    int expectedLength = 1;
     assert actualLength == expectedLength : actualLength + " != " + expectedLength;
   }
 
@@ -204,5 +251,16 @@ public class DoublyLinkedListSpec extends Group {
 
     assert nodeAtOne == p : nodeAtOne + " != " + p;
     assert returnedNode == o : returnedNode + " != " + o;
+  }
+
+  public String descContainsNode = "A list can tell you if it contains a given node";
+  public void testContainsNode() {
+    Node<String> n = new Node<String>("a value");
+    DoublyLinkedList<String> l = new DoublyLinkedList<String>(n);
+
+    assert l.contains(n);
+
+    Node<String> o = new Node<String>("a value");
+    assert !l.contains(o);
   }
 }

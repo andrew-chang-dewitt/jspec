@@ -19,7 +19,7 @@ public class Group {
     Class<?>[] nestedClasses = instanceClass.getDeclaredClasses();
 
     return new VisitResults(
-        this.evaluate(results, tests, instanceClass), 
+        this.evaluate(results, tests, instanceClass),
         this.findChildren(nestedClasses, this));
   }
 
@@ -30,7 +30,7 @@ public class Group {
   }
 
   private ArrayList<Result> evaluate(
-    ArrayList<Result> outResults, 
+    ArrayList<Result> outResults,
     Method[] tests,
     Class<? extends Group> instanceClass
   ) {
@@ -99,23 +99,5 @@ public class Group {
     } catch (NoSuchFieldException exc) {
       return null;
     }
-  }
-}
-
-class VisitResults {
-  private ArrayList<Group> children;
-  private ArrayList<Result> results;
-
-  VisitResults(ArrayList<Result> results, ArrayList<Group> children) {
-    this.children = children;
-    this.results = results;
-  }
-
-  public ArrayList<Group> getChildren() {
-    return this.children;
-  }
-
-  public ArrayList<Result> getResults() {
-    return this.results;
   }
 }

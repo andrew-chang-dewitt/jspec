@@ -1,5 +1,10 @@
 package jspec.utils;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Stack;
+
+// public class Tree<T> implements Iterable<T> {
 public class Tree<T> {
   Node<T> root;
 
@@ -47,73 +52,79 @@ public class Tree<T> {
       this.root.getTailChild());
   }
 
-  public Traversed<T> preorder() {
-    return this.traverser(0, this.root, new Traversed<T>());
+  public <U> U reduce(ReduceConsumer<T, U> action, U initialValue) {
+    // return PreorderTraverser.reduce(this, action, initialValue);
+    return this.reducer(action, initialValue, 0);
   }
 
-  private Traversed<T> traverser(
-    int depth,
-    Node<T> currentNode, 
-    Traversed<T> traversal
-  ) {
-    traversal.append(currentNode.getValue(), depth);
+  <U> U reducer(ReduceConsumer<T, U> action, U accumulator, int depth) {
+    U updated = action.accept(accumulator, this.root, depth);
 
-    new Tree<T>(currentNode)
-      .getChildren()
-      .forEach((child, idx) -> traverser(depth + 1, child, traversal));
-
-    return traversal;
+    return this.getChildren().reduce(
+      (a, x, i) -> new Tree<T>(x).reducer(action, a, depth + 1)
+      , updated);
   }
 
-  public <U> U reduce(TreeReduceCallback<T, U> cb, U initialValue) {
-    return this.reducer(cb, initialValue, this.root, 0);
+  public void forEach(ForEachConsumer<T> action) {
+    this.reduce((a, current, depth) -> {
+      action.accept(current, depth);
+
+      return null;
+    }, null);
   }
 
-  private <U> U reducer(TreeReduceCallback<T, U> cb, U currentValue, Node<T> currentNode, int depth) {
-    if (currentNode == null) return currentValue;
+  public <U> Tree<U> map(MapConsumer<T, U> action) {
+    class Tracker<V> {
+      Stack<Node<V>> parentNodes;
+      Node<V> previousNode;
+      int previousDepth;
+      Tree<V> tree;
 
-    Node<T> headChild = currentNode.getHeadChild();
-    boolean hasHeadChild = headChild != null;
+      Tracker() {
+        this.parentNodes = new Stack<Node<V>>();
+        this.previousNode = null;
+        this.previousDepth = 0;
+        this.tree = null;
+      }
+    }
 
-    return reducer(
-      cb,
-      cb.cb(currentValue, currentNode, depth),
-      hasHeadChild ? headChild : currentNode.getNextSibling(),
-      hasHeadChild ? ++depth : depth
-    );
+    Tracker<U> reduced = this.reduce(
+      (accum, currt, depth) -> {
+        Node<U> newNode = new Node<U>(action.accept(currt, depth));
+
+        if (accum.previousNode == null) {
+          accum.parentNodes.push(newNode);
+          accum.previousNode = newNode;
+          accum.tree = new Tree<U>(newNode);
+        } else if (depth > accum.previousDepth) {
+          accum.previousDepth = depth;
+          accum.parentNodes.push(accum.previousNode);
+          new Tree<U>(accum.previousNode)
+            .appendChild(newNode);
+        } else if (depth == accum.previousDepth) {
+          new Tree<U>(accum.parentNodes.peek())
+            .appendChild(newNode);
+        } else if (depth < accum.previousDepth) {
+          for (int i = 0; i < ( accum.previousDepth - depth ); i++) {
+            accum.parentNodes.pop();
+          }
+          new Tree<U>(accum.parentNodes.peek())
+            .appendChild(newNode);
+        }
+
+        return accum;
+      }, new Tracker<U>());
+
+    return reduced.tree;
   }
-}
 
-class TraversedData<T> {
-  T value;
-  int depth;
-
-  public TraversedData(T value, int depth) {
-    this.value = value;
-    this.depth = depth;
+  public Iterator<T> iterator() {
+    return this
+      .reduce(
+        (list, node, d) -> {
+          list.add(node.getValue());
+          return list;
+        }, new ArrayList<T>())
+      .iterator();
   }
-
-  public T getValue() {
-    return this.value;
-  }
-
-  public int getDepth() {
-    return this.depth;
-  }
-}
-
-class Traversed<T> extends DoublyLinkedList<TraversedData<T>> {
-  public void append(T value, int depth) {
-    this.append(
-      new Node<TraversedData<T>>(
-        new TraversedData<T>(value, depth)));
-  }
-}
-
-interface TreeReduceCallback<T, U> {
-  public U cb(U accumulator, Node<T> current, int depth);
-}
-
-interface TreeForEachCallback<T> {
-  public void cb(Node<T> current, int depth);
 }

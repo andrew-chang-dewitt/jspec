@@ -82,12 +82,12 @@ public class DoublyLinkedList<T> {
     return deleted;
   }
 
-  public <U> U reduce(ReduceCallback<T, U> cb, U initialValue) {
-    return this.reducer(cb, initialValue, this.head, 0);
+  public <U> U reduce(ReduceConsumer<T, U> action, U initialValue) {
+    return this.reducer(action, initialValue, this.head, 0);
   }
 
   private <U> U reducer(
-    ReduceCallback<T, U> cb, 
+    ReduceConsumer<T, U> action, 
     U currentValue, 
     Node<T> currentNode, 
     int currentIndex
@@ -95,8 +95,8 @@ public class DoublyLinkedList<T> {
     if (currentNode == null) return currentValue;
     
     return reducer(
-      cb, 
-      cb.cb(currentValue, currentNode, currentIndex), 
+      action, 
+      action.accept(currentValue, currentNode, currentIndex), 
       currentNode.getNextSibling(), 
       ++currentIndex);
   }
@@ -107,7 +107,7 @@ public class DoublyLinkedList<T> {
     }, false);
   }
 
-  public void forEach(ForEachCallback<T> cb, boolean reverse) {
+  public void forEach(ForEachConsumer<T> action, boolean reverse) {
     int index = 0;
     Node<T> current;
 
@@ -118,7 +118,7 @@ public class DoublyLinkedList<T> {
     }
 
     while (current != null) {
-      cb.cb(current, index);
+      action.accept(current, index);
 
       index++;
       if (reverse) {
@@ -129,8 +129,8 @@ public class DoublyLinkedList<T> {
     }
   }
 
-  public void forEach(ForEachCallback<T> cb) {
-    this.forEach(cb, false);
+  public void forEach(ForEachConsumer<T> action) {
+    this.forEach(action, false);
   }
 
   public void append(Node<T> node) {
@@ -152,12 +152,4 @@ public class DoublyLinkedList<T> {
 
     this.head = node;
   }
-}
-
-interface ReduceCallback<T, U> {
-  public U cb(U accumulator, Node<T> x, int index);
-}
-
-interface ForEachCallback<T> {
-  public void cb(Node<T> x, int index);
 }

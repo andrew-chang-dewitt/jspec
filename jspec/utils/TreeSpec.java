@@ -2,6 +2,8 @@ package jspec.utils;
 
 import jspec.lib.Group;
 
+import java.util.Iterator;
+
 public class TreeSpec extends Group {
   final String desc = "utils.Node";
 
@@ -120,55 +122,13 @@ public class TreeSpec extends Group {
 
   // FIXME: this works as defined below, but is missing features:
   // 1. needs inversion of control
-  // 2. needs to be aware of depth of current node during inversion 
+  // 2. needs to be aware of depth of current node during inversion
   //    (in callback)
-  // 3. ideally will be something that can be passed to a reduce 
+  // 3. ideally will be something that can be passed to a reduce
   //    method and a forEach method on Tree => probably means traversal
   //    functionality needs split off into own interface/class?
-  public String descTraverse = "A tree can be traversed";
-  public void testTraverse() {
-    /* Build a tree that looks like this:
-     *
-     *          1
-     *         /|\
-     *        2 3 4
-     *          |
-     *          5
-     */
-    Node<Integer> a = new Node<Integer>(1);
-    Tree<Integer> tree = new Tree<Integer>(a);
-    Node<Integer> b = new Node<Integer>(2);
-    Node<Integer> c = new Node<Integer>(3);
-    Node<Integer> d = new Node<Integer>(4);
-
-    tree.appendChild(b);
-    tree.appendChild(c);
-    tree.appendChild(d);
-
-    Tree<Integer> ctree = new Tree<Integer>(c);
-    Node<Integer> e = new Node<Integer>(5);
-
-    ctree.appendChild(e);
-
-    /* Preorder traversal should return Traversed list:
-     * 1 -> 2 -> 3 -> 5 -> 4
-     */
-    DoublyLinkedList<Node<> traversed = tree.preorder();
-
-    assert traversed.get(0).getValue().getValue() == 1;
-    assert traversed.get(0).getValue().getDepth() == 1;
-    assert traversed.get(1).getValue().getValue() == 2;
-    assert traversed.get(1).getValue().getDepth() == 2;
-    assert traversed.get(2).getValue().getValue() == 3;
-    assert traversed.get(2).getValue().getDepth() == 3;
-    assert traversed.get(3).getValue().getValue() == 5;
-    assert traversed.get(3).getValue().getDepth() == 5;
-    assert traversed.get(4).getValue().getValue() == 4;
-    assert traversed.get(4).getValue().getDepth() == 4;
-  }
-
-  // public String descReduce = "A tree can be reduced";
-  // public void testReduce() {
+  // public String descTraverse = "A tree can be traversed";
+  // public void testTraverse() {
   //   /* Build a tree that looks like this:
   //    *
   //    *          1
@@ -192,30 +152,137 @@ public class TreeSpec extends Group {
 
   //   ctree.appendChild(e);
 
-  //   /* reduce uses a preorder traversal & 
-  //    * a callback that sums the values of each node,
-  //    * so it should do the following
-  //    *   0       // initial value
-  //    *   0 + 1   // add a
-  //    *   1 + 2   // add b
-  //    *   3 + 3   // add c
-  //    *   6 + 5   // add e
-  //    *   11 + 4  // add d
-  //    *   15      // return total
+  //   /* Preorder traversal should return Traversed list:
+  //    * 1 -> 2 -> 3 -> 5 -> 4
   //    */
-  //   int result = tree.reduce(
-  //     (accumulator, current, depth) -> {
-  //       System.out.println("current accumulator value " + accumulator);
-  //       System.out.println("current node's value " + current.getValue());
-  //       System.out.println("current depth " + depth);
-  //       return accumulator + current.getValue();
-  //     }
-  //       , 0);
-  //   int expected = 15;
-
-  //   assert result == expected
-  //     : result + " != " + expected;
   // }
+
+  public String descReduce = "A tree can be reduced";
+  public void testReduce() {
+    /* Build a tree that looks like this:
+     *
+     *          1
+     *         /|\
+     *        2 3 4
+     *          |
+     *          5
+     */
+    Node<Integer> a = new Node<Integer>(1);
+    Tree<Integer> tree = new Tree<Integer>(a);
+    Node<Integer> b = new Node<Integer>(2);
+    Node<Integer> c = new Node<Integer>(3);
+    Node<Integer> d = new Node<Integer>(4);
+
+    tree.appendChild(b);
+    tree.appendChild(c);
+    tree.appendChild(d);
+
+    Tree<Integer> ctree = new Tree<Integer>(c);
+    Node<Integer> e = new Node<Integer>(5);
+
+    ctree.appendChild(e);
+
+    int result = tree.reduce(
+      (accumulator, current, depth) -> accumulator + current.getValue()
+      , 0);
+    int expected = 15;
+
+    assert result == expected
+      : result + " != " + expected;
+  }
+
+  public String descReduceCbKnowsDepth = "Reduce correctly gives a node's depth to callback";
+  public void testReduceCbKnowsDepth() {
+    /* Build a tree that looks like this:
+     *
+     *          1
+     *         /|\
+     *        2 3 4
+     *          |
+     *          5
+     */
+    Node<Integer> a = new Node<Integer>(1);
+    Tree<Integer> tree = new Tree<Integer>(a);
+    Node<Integer> b = new Node<Integer>(2);
+    Node<Integer> c = new Node<Integer>(3);
+    Node<Integer> d = new Node<Integer>(4);
+
+    tree.appendChild(b);
+    tree.appendChild(c);
+    tree.appendChild(d);
+
+    Tree<Integer> ctree = new Tree<Integer>(c);
+    Node<Integer> e = new Node<Integer>(5);
+
+    ctree.appendChild(e);
+
+    /* reduce tree to the depth of the deepest leaf
+     *
+     *       1     // depth => 0
+     *      /|\
+     *     2 3 4   // depth => 1
+     *       |
+     *       5     // depth => 2
+     */
+    int result = tree.reduce(
+      (accumulator, current, depth) ->
+        accumulator < depth ? depth : accumulator
+      , 0);
+    int expected = 2;
+
+    assert result == expected
+      : result + " != " + expected;
+  }
+
+  public String descMapBuildsANewTree = "Map returns a new Tree with modified elements in place of the old ones in the original Tree";
+  public void testMapBuildsANewTree() {
+    /* Build a tree that looks like this:
+     *
+     *          1
+     *         /|\
+     *        2 3 4
+     *          |
+     *          5
+     */
+    Node<Integer> a = new Node<Integer>(1);
+    Tree<Integer> tree = new Tree<Integer>(a);
+    Node<Integer> b = new Node<Integer>(2);
+    Node<Integer> c = new Node<Integer>(3);
+    Node<Integer> d = new Node<Integer>(4);
+
+    tree.appendChild(b);
+    tree.appendChild(c);
+    tree.appendChild(d);
+
+    Tree<Integer> ctree = new Tree<Integer>(c);
+    Node<Integer> e = new Node<Integer>(5);
+
+    ctree.appendChild(e);
+
+    /* Add one to every node & return new tree
+     *
+     *       2
+     *      /|\
+     *     3 4 5
+     *       |
+     *       6
+     */
+    Tree<Integer> result = tree.map(
+      (node, depth) -> node.getValue() + 1);
+
+    Iterator<Integer> iter = result.iterator();
+
+    int actual = iter.next();
+    assert actual == 2 : "first node should be 2, not " + actual;
+    actual = iter.next();
+    assert actual == 3 : "second node should be 3, not " + actual;
+    actual = iter.next();
+    assert actual == 4 : "third node should be 4, not " + actual;
+    actual = iter.next();
+    assert actual == 6 : "fourth node should be 6, not " + actual;
+    actual = iter.next();
+    assert actual == 5 : "fifth node should be 5, not " + actual;
+  }
 }
 
 class TreeFactory {

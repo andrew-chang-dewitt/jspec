@@ -1,8 +1,11 @@
-package jspec.utils;
+package jspec.utils.tree;
 
 import jspec.lib.Group;
 
 import java.util.Iterator;
+
+import jspec.utils.Node;
+import jspec.utils.list.DoublyLinkedList;
 
 public class TreeSpec extends Group {
   final String desc = "utils.Node";

@@ -1,8 +1,14 @@
-package jspec.utils;
+package jspec.utils.tree;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Stack;
+
+import jspec.utils.Node;
+import jspec.utils.MapConsumer;
+import jspec.utils.ReduceConsumer;
+import jspec.utils.ForEachConsumer;
+import jspec.utils.list.DoublyLinkedList;
 
 // public class Tree<T> implements Iterable<T> {
 public class Tree<T> {

@@ -1,4 +1,8 @@
-package jspec.utils;
+package jspec.utils.list;
+
+import jspec.utils.Node;
+import jspec.utils.ReduceConsumer;
+import jspec.utils.ForEachConsumer;
 
 public class DoublyLinkedList<T> {
   Node<T> head;

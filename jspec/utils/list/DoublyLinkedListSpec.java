@@ -1,6 +1,8 @@
-package jspec.utils;
+package jspec.utils.list;
 
 import jspec.lib.Group;
+
+import jspec.utils.Node;
 
 public class DoublyLinkedListSpec extends Group {
   final String desc = "utils.LinkedList";

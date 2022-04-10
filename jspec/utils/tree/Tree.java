@@ -5,13 +5,13 @@ import java.util.Iterator;
 import java.util.Stack;
 
 import jspec.utils.Node;
+import jspec.utils.ForEachConsumer;
 import jspec.utils.MapConsumer;
 import jspec.utils.ReduceConsumer;
-import jspec.utils.ForEachConsumer;
+import jspec.utils.ValueNotFound;
 import jspec.utils.list.DoublyLinkedList;
 
-// public class Tree<T> implements Iterable<T> {
-public class Tree<T> {
+public class Tree<T> implements Iterable<T> {
   Node<T> root;
 
   public Tree(Node<T> root) {
@@ -122,6 +122,18 @@ public class Tree<T> {
       }, new Tracker<U>());
 
     return reduced.tree;
+  }
+
+  public Node<T> find(T value) throws ValueNotFound {
+     Node<T> result = this.reduce(
+      (found, current, d) -> {
+        if(found != null) return found;
+        T currentValue = current.getValue();
+        return currentValue == value ? current : found;
+      }, null);
+
+     if (result == null) throw new ValueNotFound(value, this);
+     return result;
   }
 
   public Iterator<T> iterator() {

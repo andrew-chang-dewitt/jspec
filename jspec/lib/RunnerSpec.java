@@ -8,10 +8,11 @@ public class RunnerSpec extends Group {
 
     spec
       .visit()
-      .forEach(result -> System.out.println(
-        result.getDescription() +
+      .getResults()
+      .forEach((result, i) -> System.out.println(
+        result.getValue().getDescription() +
         " " +
-        (result.didPass()
+        (result.getValue().didPass()
           ? "✅"
           : "❌")));
   }

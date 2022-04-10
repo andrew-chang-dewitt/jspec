@@ -98,9 +98,3 @@ public class Result {
     throw new NotATestResult(this.codeName, "failureStrings");
   }
 }
-
-class NotATestResult extends Exception {
-  NotATestResult(String codeName, String opName) {
-    super("Result " + codeName + "is not a test result, unable to use method " + opName);
-  }
-}

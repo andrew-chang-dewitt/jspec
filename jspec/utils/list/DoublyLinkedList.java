@@ -186,4 +186,10 @@ public class DoublyLinkedList<T> {
       return acc || current == node;
     }, false);
   }
+
+  public boolean contains(T value) {
+    return this.reduce((acc, current, idx) -> {
+      return acc || current.getValue() == value;
+    }, false);
+  }
 }

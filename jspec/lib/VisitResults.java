@@ -1,21 +1,21 @@
 package jspec.lib;
 
-import java.util.ArrayList;
+import jspec.utils.list.DoublyLinkedList;
 
 public class VisitResults {
-  private ArrayList<Group> children;
-  private ArrayList<Result> results;
+  private DoublyLinkedList<Group> children;
+  private DoublyLinkedList<Result> results;
 
-  VisitResults(ArrayList<Result> results, ArrayList<Group> children) {
+  VisitResults(DoublyLinkedList<Result> results, DoublyLinkedList<Group> children) {
     this.children = children;
     this.results = results;
   }
 
-  public ArrayList<Group> getChildren() {
+  public DoublyLinkedList<Group> getChildren() {
     return this.children;
   }
 
-  public ArrayList<Result> getResults() {
+  public DoublyLinkedList<Result> getResults() {
     return this.results;
   }
 }

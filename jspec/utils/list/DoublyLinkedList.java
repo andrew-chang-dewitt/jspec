@@ -1,8 +1,9 @@
 package jspec.utils.list;
 
 import jspec.utils.Node;
-import jspec.utils.ReduceConsumer;
 import jspec.utils.ForEachConsumer;
+import jspec.utils.MapConsumer;
+import jspec.utils.ReduceConsumer;
 
 public class DoublyLinkedList<T> {
   Node<T> head;
@@ -21,6 +22,16 @@ public class DoublyLinkedList<T> {
   public DoublyLinkedList(Node<T> head, Node<T> tail) {
     this.head = head;
     this.tail = tail;
+  }
+
+  public static <T> DoublyLinkedList<T> fromArray(T[] arr) {
+    DoublyLinkedList<T> newList = new DoublyLinkedList<T>();
+
+    for (T t: arr) {
+      newList.append(t);
+    }
+
+    return newList;
   }
 
   public Node<T> getHead() {
@@ -42,6 +53,38 @@ public class DoublyLinkedList<T> {
       if (i == index) return x;
       else return a;
     }, null);
+  }
+
+  public DoublyLinkedList<T> append(T value) {
+    return this.append(new Node<T>(value));
+  }
+
+  public DoublyLinkedList<T> append(Node<T> node) {
+    if (this.tail != null) {
+      this.tail.addNextSibling(node);
+    } else {
+      this.head = node;
+    }
+
+    this.tail = node;
+
+    return this;
+  }
+
+  public DoublyLinkedList<T> prepend(T value) {
+    return this.prepend(new Node<T>(value));
+  }
+
+  public DoublyLinkedList<T> prepend(Node<T> node) {
+    if (this.head != null) {
+      this.head.addPrevSibling(node);
+    } else {
+      this.tail = node;
+    }
+
+    this.head = node;
+
+    return this;
   }
 
   public Node<T> replace(Node<T> node, int index) {
@@ -91,24 +134,25 @@ public class DoublyLinkedList<T> {
   }
 
   private <U> U reducer(
-    ReduceConsumer<T, U> action, 
-    U currentValue, 
-    Node<T> currentNode, 
+    ReduceConsumer<T, U> action,
+    U currentValue,
+    Node<T> currentNode,
     int currentIndex
   ) {
     if (currentNode == null) return currentValue;
-    
+
     return reducer(
-      action, 
-      action.accept(currentValue, currentNode, currentIndex), 
-      currentNode.getNextSibling(), 
+      action,
+      action.accept(currentValue, currentNode, currentIndex),
+      currentNode.getNextSibling(),
       ++currentIndex);
   }
 
-  public boolean contains(Node<T> node) {
-    return this.reduce((acc, current, idx) -> {
-      return acc || current == node;
-    }, false);
+  public <U> DoublyLinkedList<U> map(MapConsumer<T, U> action) {
+    return this.reduce(
+      (list, node, idx) ->
+        list.append(action.accept(node, idx)),
+      new DoublyLinkedList<U>());
   }
 
   public void forEach(ForEachConsumer<T> action, boolean reverse) {
@@ -137,23 +181,9 @@ public class DoublyLinkedList<T> {
     this.forEach(action, false);
   }
 
-  public void append(Node<T> node) {
-    if (this.tail != null) {
-      this.tail.addNextSibling(node);
-    } else {
-      this.head = node;
-    }
-
-    this.tail = node;
-  }
-
-  public void prepend(Node<T> node) {
-    if (this.head != null) {
-      this.head.addPrevSibling(node);
-    } else {
-      this.tail = node;
-    }
-
-    this.head = node;
+  public boolean contains(Node<T> node) {
+    return this.reduce((acc, current, idx) -> {
+      return acc || current == node;
+    }, false);
   }
 }

@@ -3,7 +3,8 @@ package jspec.lib;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
+
+import jspec.utils.list.DoublyLinkedList;
 
 public class Group {
   static String testPrefix = "test";
@@ -11,7 +12,7 @@ public class Group {
 
   protected String desc = null;
 
-  public VisitResults visit(ArrayList<Result> results) {
+  public VisitResults visit() {
     // this.getClass() will return a Group or any descendent of it
     // using ? extends Group allows for that possibility
     Class<? extends Group> instanceClass = this.getClass();
@@ -19,21 +20,16 @@ public class Group {
     Class<?>[] nestedClasses = instanceClass.getDeclaredClasses();
 
     return new VisitResults(
-        this.evaluate(results, tests, instanceClass),
+        this.evaluate(tests, instanceClass),
         this.findChildren(nestedClasses, this));
   }
 
-  // overload w/ default value of empty Results collection
-  // when not given one
-  public VisitResults visit() {
-    return this.visit(new ArrayList<Result>());
-  }
-
-  private ArrayList<Result> evaluate(
-    ArrayList<Result> outResults,
+  private DoublyLinkedList<Result> evaluate(
     Method[] tests,
     Class<? extends Group> instanceClass
   ) {
+    DoublyLinkedList<Result> results = new DoublyLinkedList<Result>();
+
     for (Method test : tests) {
       String name = test.getName();
       if (name.startsWith(Group.testPrefix)) {
@@ -46,27 +42,27 @@ public class Group {
 
         try {
           test.invoke(this);
-          outResults.add(result.pass());
+          results.append(result.pass());
         } catch (InvocationTargetException exc) {
-          outResults.add(result.fail(exc));
+          results.append(result.fail(exc));
         } catch (IllegalAccessException exc) {
-          outResults.add(result.fail(exc));
+          results.append(result.fail(exc));
         }
       }
     }
 
-    return outResults;
+    return results;
   }
 
-  private ArrayList<Group> findChildren(Class<?>[] nested, Group parent) {
-    ArrayList<Group> children = new ArrayList<Group>();
+  private DoublyLinkedList<Group> findChildren(Class<?>[] nested, Group parent) {
+    DoublyLinkedList<Group> children = new DoublyLinkedList<Group>();
 
     for (Class<?> c : nested) {
       if (Group.class.isAssignableFrom(c)) {
         try {
           Constructor<?> constructor = c.getDeclaredConstructor(parent.getClass());
           Group group = (Group)constructor.newInstance(parent);
-          children.add(group);
+          children.append(group);
         } catch (IllegalAccessException exc) {
           System.err.println("Error executing constructor on class: " + c);
           System.err.println(exc);

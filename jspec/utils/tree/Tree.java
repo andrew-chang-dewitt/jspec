@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Stack;
 
-import jspec.utils.Node;
+import jspec.utils.FindPredicate;
 import jspec.utils.ForEachConsumer;
 import jspec.utils.MapConsumer;
+import jspec.utils.Node;
 import jspec.utils.ReduceConsumer;
 import jspec.utils.ValueNotFound;
 import jspec.utils.list.DoublyLinkedList;
@@ -127,13 +128,44 @@ public class Tree<T> implements Iterable<T> {
   public Node<T> find(T value) throws ValueNotFound {
      Node<T> result = this.reduce(
       (found, current, d) -> {
-        if(found != null) return found;
+        if (found != null) return found;
         T currentValue = current.getValue();
+
         return currentValue == value ? current : found;
       }, null);
 
      if (result == null) throw new ValueNotFound(value, this);
      return result;
+  }
+
+  public Node<T> find(FindPredicate<T> predicate) throws ValueNotFound {
+     Node<T> result = this.reduce(
+      (found, current, d) -> {
+        if (found != null) return found;
+
+        return predicate.check(current) ? current : found;
+      }, null);
+
+     if (result == null) throw new ValueNotFound(predicate, this);
+     return result;
+  }
+
+  public boolean contains(T value) {
+    try {
+      this.find(value);
+      return true;
+    } catch (ValueNotFound exc) {
+      return false;
+    }
+  }
+
+  public boolean contains(FindPredicate<T> predicate) {
+    try {
+      this.find(predicate);
+      return true;
+    } catch (ValueNotFound exc) {
+      return false;
+    }
   }
 
   public Iterator<T> iterator() {

@@ -4,8 +4,14 @@ import jspec.utils.Node;
 import jspec.utils.list.DoublyLinkedList;
 
 public class Runner {
+  private String indent = "  ";
+
   private DoublyLinkedList<Group> groups;
   private ResultsTree results;
+
+  public Runner() {
+    this.groups = new DoublyLinkedList<Group>();
+  }
 
   public Runner(Group ...groups) {
     Node<Group> head = new Node<Group>(groups[0]);
@@ -23,7 +29,10 @@ public class Runner {
     return this.groups;
   }
 
-  // TODO: Test this
+  public ResultsTree getResults() {
+    return this.results;
+  }
+
   public Runner run() {
     // start a tree w/ just the root node to add Results to
     Result root = new Result("");
@@ -41,7 +50,7 @@ public class Runner {
     Group group
   ) {
     // Add this Group as a Result child to the tree
-    Node<Result> currNode = new Node<Result>(new Result(group.desc));
+    Node<Result> currNode = new Node<Result>(new Result(group.getClass().getName()));
     tree.appendChild(currNode);
     // visit Group to execute tests & discover children
     VisitResults visited = group.visit();
@@ -55,4 +64,29 @@ public class Runner {
 
     return tree;
   }
+
+  public DoublyLinkedList<String> resultStrings() {
+    DoublyLinkedList<String> statuses = this.results.reduce(
+      (list, node, depth) ->
+        list.append(node
+          .getValue()
+          .statusString(this.indent.repeat(depth))), 
+      new DoublyLinkedList<String>());
+
+    return statuses;
+  }
 }
+
+// class ResultsStringParts {
+//   DoublyLinkedList<String> statuses;
+//   DoublyLinkedList<String> failures;
+// 
+//   ResultsStringParts() {
+//     this.statuses = new DoublyLinkedList<String>();
+//     this.failures = new DoublyLinkedList<String>();
+//   }
+// 
+//   DoublyLinkedList<String> compose() {
+//     return this.statuses.concat(this.failures);
+//   }
+// }

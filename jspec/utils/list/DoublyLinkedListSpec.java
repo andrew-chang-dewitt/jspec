@@ -2,6 +2,8 @@ package jspec.utils.list;
 
 import jspec.lib.Group;
 
+import java.util.Iterator;
+import jspec.lib.NotATestResult;
 import jspec.utils.Node;
 
 public class DoublyLinkedListSpec extends Group {
@@ -13,18 +15,20 @@ public class DoublyLinkedListSpec extends Group {
     spec
       .visit()
       .getResults()
-      .forEach(result -> {
-        System.out.println(
-            result.getDescription() +
-            " " +
-            (result.didPass()
-             ? "✅"
-             : "❌"));
+      .forEach(( result, i ) -> {
+        System.out.print(result.getValue().getDescription());
+        System.out.print(" ");
 
-        if (!result.didPass()) {
-          System.out.print("\n");
-          result.getFailureExc().getCause().printStackTrace();
-          System.out.print("\n");
+        try {
+            if (result.getValue().didPass()) {
+                System.out.print("✅\n");
+            } else {
+                System.out.print("❌\n");
+                System.out.println();
+                result.getValue().getFailureExc().getCause().printStackTrace();
+                System.out.println();
+            }
+        } catch (NotATestResult exc) {
         }
       });
   }
@@ -264,5 +268,19 @@ public class DoublyLinkedListSpec extends Group {
 
     Node<String> o = new Node<String>("a value");
     assert !l.contains(o);
+  }
+
+  public String descCanBeIterated = "A list is iterable";
+  public void testCanBeIterated() {
+    Node<String> n = new Node<String>("n");
+    Node<String> o = new Node<String>("o").addPrevSibling(n);
+    Node<String> p = new Node<String>("p").addPrevSibling(o);
+    DoublyLinkedList<String> l = new DoublyLinkedList<String>(n, p);
+
+    Iterator<String> iter = l.iterator();
+
+    assert iter.next() == "n";
+    assert iter.next() == "o";
+    assert iter.next() == "p";
   }
 }

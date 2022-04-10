@@ -1,11 +1,12 @@
 package jspec.utils.list;
 
+import java.util.Iterator;
 import jspec.utils.Node;
 import jspec.utils.ForEachConsumer;
 import jspec.utils.MapConsumer;
 import jspec.utils.ReduceConsumer;
 
-public class DoublyLinkedList<T> {
+public class DoublyLinkedList<T> implements Iterable<T> {
   Node<T> head;
   Node<T> tail;
 
@@ -191,5 +192,28 @@ public class DoublyLinkedList<T> {
     return this.reduce((acc, current, idx) -> {
       return acc || current.getValue() == value;
     }, false);
+  }
+
+  public Iterator<T> iterator() {
+    return new DLLIterator<T>(this);
+  }
+}
+
+class DLLIterator<T> implements Iterator<T> {
+  Node<T> currentNode;
+
+  DLLIterator(DoublyLinkedList<T> list) {
+    this.currentNode = list.getHead();
+  }
+
+  public T next() {
+    T result = currentNode.getValue();
+    this.currentNode = this.currentNode.getNextSibling();
+
+    return result;
+  }
+
+  public boolean hasNext() {
+    return !(this.currentNode.getNextSibling() == null);
   }
 }

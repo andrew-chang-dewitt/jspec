@@ -213,9 +213,10 @@ public class RunnerSpec extends Group {
     // Run the runner & get the results as list of strings
     Iterator<String> strings = r.run().resultStrings().iterator();
 
+    // FIXME: I think the error here might be in Result's status String method
     String actual = strings.next();
     String expected = "";
-    assert actual == expected : "Expected " + actual + " == " + expected;
+    assert actual == expected : "Expected '" + actual + "' to equal '" + expected + "'";
     actual = strings.next();
     expected = "G1";
     assert actual.contains(expected) : "Expected " + actual + " to contain " + expected;

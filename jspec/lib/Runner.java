@@ -67,10 +67,12 @@ public class Runner {
 
   public DoublyLinkedList<String> resultStrings() {
     DoublyLinkedList<String> statuses = this.results.reduce(
-      (list, node, depth) ->
-        list.append(node
+      (list, node, depth) -> {
+        System.out.println(node.getValue().statusString());
+        return list.append(node
           .getValue()
-          .statusString(this.indent.repeat(depth))), 
+          .statusString(this.indent.repeat(depth)));
+      },
       new DoublyLinkedList<String>());
 
     return statuses;
@@ -80,12 +82,12 @@ public class Runner {
 // class ResultsStringParts {
 //   DoublyLinkedList<String> statuses;
 //   DoublyLinkedList<String> failures;
-// 
+//
 //   ResultsStringParts() {
 //     this.statuses = new DoublyLinkedList<String>();
 //     this.failures = new DoublyLinkedList<String>();
 //   }
-// 
+//
 //   DoublyLinkedList<String> compose() {
 //     return this.statuses.concat(this.failures);
 //   }

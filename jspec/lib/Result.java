@@ -66,7 +66,7 @@ public class Result {
 
   public String statusString(String prefix) {
     // text should be long description, if it exists
-    String text = this.getDescription() == ""
+    String text = this.getDescription() == "" || this.getDescription() == null
       ? this.getCodeName()
       : this.getDescription();
 

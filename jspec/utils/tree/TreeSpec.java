@@ -1,7 +1,7 @@
 package jspec.utils.tree;
 
 import jspec.lib.Group;
-import jspec.lib.NotATestResult;
+import jspec.lib.Runner;
 
 import java.util.Iterator;
 
@@ -14,26 +14,10 @@ public class TreeSpec extends Group {
 
   public static void main(String[] args) {
     TreeSpec spec = new TreeSpec();
-
-    spec
-      .visit()
-      .getResults()
-      .forEach(( result, i ) -> {
-        System.out.print(result.getValue().getDescription());
-        System.out.print(" ");
-
-        try {
-            if (result.getValue().didPass()) {
-                System.out.print("✅\n");
-            } else {
-                System.out.print("❌\n");
-                System.out.println();
-                result.getValue().getFailureExc().getCause().printStackTrace();
-                System.out.println();
-            }
-        } catch (NotATestResult exc) {
-        }
-      });
+    new Runner(spec)
+      .run()
+      .resultStrings()
+      .forEach((node, i) -> System.out.println(node.getValue()));
   }
 
   public String descCreateTree = "Creating a tree adds given node as root";

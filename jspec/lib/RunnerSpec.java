@@ -10,26 +10,10 @@ public class RunnerSpec extends Group {
 
   public static void main(String[] args) {
     RunnerSpec spec = new RunnerSpec();
-
-    spec
-      .visit()
-      .getResults()
-      .forEach(( result, i ) -> {
-        System.out.print(result.getValue().getDescription());
-        System.out.print(" ");
-
-        try {
-            if (result.getValue().didPass()) {
-                System.out.print("✅\n");
-            } else {
-                System.out.print("❌\n");
-                System.out.println();
-                result.getValue().getFailureExc().getCause().printStackTrace();
-                System.out.println();
-            }
-        } catch (NotATestResult exc) {
-        }
-      });
+    new Runner(spec)
+      .run()
+      .resultStrings()
+      .forEach((node, i) -> System.out.println(node.getValue()));
   }
 
   String descConstructorNoArgs = "A Runner can be created w/ no arguments";
@@ -148,7 +132,7 @@ public class RunnerSpec extends Group {
       }
 
       class G2 extends Group {
-        public void innerTest() {
+        public void testInner() {
           assert true;
         }
       }
@@ -200,7 +184,7 @@ public class RunnerSpec extends Group {
       }
 
       class G2 extends Group {
-        public void innerTest() {
+        public void testInner() {
           assert true;
         }
       }
@@ -213,26 +197,58 @@ public class RunnerSpec extends Group {
     // Run the runner & get the results as list of strings
     Iterator<String> strings = r.run().resultStrings().iterator();
 
-    // FIXME: I think the error here might be in Result's status String method
     String actual = strings.next();
     String expected = "";
-    assert actual == expected : "Expected '" + actual + "' to equal '" + expected + "'";
+    assert actual.compareTo(expected) == 0
+      : "Expected '" + actual + "' to equal '" + expected + "'";
+
     actual = strings.next();
     expected = "G1";
-    assert actual.contains(expected) : "Expected " + actual + " to contain " + expected;
+    assert actual.contains(expected)
+      : "Expected " + actual + " to contain " + expected;
+    String prefix = "  ";
+    assert actual.startsWith(prefix)
+      : "Expected " + actual + " to start with " + prefix;
+
     actual = strings.next();
     expected = "testATest";
-    assert actual.contains(expected);
-    assert actual.contains(expected) : "Expected " + actual + " to contain " + expected;
+    assert actual.contains(expected)
+      : "Expected " + actual + " to contain " + expected;
+    prefix = "    ";
+    assert actual.startsWith(prefix)
+      : "Expected " + actual + " to start with " + prefix;
+    String pass = " ✅";
+    assert actual.endsWith(pass)
+      : "Expected " + actual + " to end with " + pass;
+
     actual = strings.next();
     expected = "testAnother";
-    assert actual.contains(expected) : "Expected " + actual + " to contain " + expected;
+    assert actual.contains(expected)
+      : "Expected " + actual + " to contain " + expected;
+    prefix = "    ";
+    assert actual.startsWith(prefix)
+      : "Expected " + actual + " to start with " + prefix;
+    String fail = " ❌";
+    assert actual.endsWith(fail)
+      : "Expected " + actual + " to end with " + fail;
+
     actual = strings.next();
     expected = "G2";
-    assert actual.contains(expected) : "Expected " + actual + " to contain " + expected;
+    assert actual.contains(expected)
+      : "Expected " + actual + " to contain " + expected;
+    prefix = "    ";
+    assert actual.startsWith(prefix)
+      : "Expected " + actual + " to start with " + prefix;
+
     actual = strings.next();
-    expected = "innerTest";
-    assert actual.contains(expected) : "Expected " + actual + " to contain " + expected;
+    expected = "testInner";
+    assert actual.contains(expected)
+      : "Expected " + actual + " to contain " + expected;
+    prefix = "      ";
+    assert actual.startsWith(prefix)
+      : "Expected " + actual + " to start with " + prefix;
+    assert actual.endsWith(pass)
+      : "Expected " + actual + " to end with " + pass;
   }
 }
 

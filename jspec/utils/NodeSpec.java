@@ -1,39 +1,17 @@
 package jspec.utils;
 
-import java.util.ArrayList;
-
 import jspec.lib.Group;
-import jspec.lib.Result;
-import jspec.lib.VisitResults;
+import jspec.lib.Runner;
 
 public class NodeSpec extends Group {
   final String desc = "utils.Node";
 
   public static void main(String[] args) {
     NodeSpec spec = new NodeSpec();
-
-    VisitResults visited = spec.visit();
-
-    NodeSpec.renderResults(visited.getResults());
-
-    visited
-      .getChildren()
-      .forEach(g -> {
-        NodeSpec.renderResults(g.visit().getResults(), "  ");
-      });
-  }
-
-  static void renderResults(ArrayList<Result> results, String indent) {
-    results.forEach(result -> System.out.println(
-        indent +
-        result.getDescription() +
-        " " +
-        (result.didPass()
-          ? "✅"
-          : "❌")));
-  }
-  static void renderResults(ArrayList<Result> results) {
-    NodeSpec.renderResults(results, "");
+    new Runner(spec)
+      .run()
+      .resultStrings()
+      .forEach((node, i) -> System.out.println(node.getValue()));
   }
 
   public String descStoresAValue = "A Node stores a given value";

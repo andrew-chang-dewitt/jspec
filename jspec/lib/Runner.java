@@ -50,7 +50,8 @@ public class Runner {
     Group group
   ) {
     // Add this Group as a Result child to the tree
-    Node<Result> currNode = new Node<Result>(new Result(group.getClass().getName()));
+    String groupName = group.getClass().getName();
+    Node<Result> currNode = new Node<Result>(new Result(groupName));
     tree.appendChild(currNode);
     // visit Group to execute tests & discover children
     VisitResults visited = group.visit();
@@ -67,12 +68,9 @@ public class Runner {
 
   public DoublyLinkedList<String> resultStrings() {
     DoublyLinkedList<String> statuses = this.results.reduce(
-      (list, node, depth) -> {
-        System.out.println(node.getValue().statusString());
-        return list.append(node
-          .getValue()
-          .statusString(this.indent.repeat(depth)));
-      },
+      (list, node, depth) -> list.append(node
+        .getValue()
+        .statusString(this.indent.repeat(depth))),
       new DoublyLinkedList<String>());
 
     return statuses;

@@ -1,7 +1,9 @@
 package jspec.utils.list;
 
 import jspec.lib.Group;
+import jspec.lib.Runner;
 
+import java.util.Iterator;
 import jspec.utils.Node;
 
 public class DoublyLinkedListSpec extends Group {
@@ -9,24 +11,10 @@ public class DoublyLinkedListSpec extends Group {
 
   public static void main(String[] args) {
     DoublyLinkedListSpec spec = new DoublyLinkedListSpec();
-
-    spec
-      .visit()
-      .getResults()
-      .forEach(result -> {
-        System.out.println(
-            result.getDescription() +
-            " " +
-            (result.didPass()
-             ? "✅"
-             : "❌"));
-
-        if (!result.didPass()) {
-          System.out.print("\n");
-          result.getFailureExc().getCause().printStackTrace();
-          System.out.print("\n");
-        }
-      });
+    new Runner(spec)
+      .run()
+      .resultStrings()
+      .forEach((node, i) -> System.out.println(node.getValue()));
   }
 
   public String descCreatingWithOneNode = "Create a list with only one node sets that node as the head & tail";
@@ -264,5 +252,19 @@ public class DoublyLinkedListSpec extends Group {
 
     Node<String> o = new Node<String>("a value");
     assert !l.contains(o);
+  }
+
+  public String descCanBeIterated = "A list is iterable";
+  public void testCanBeIterated() {
+    Node<String> n = new Node<String>("n");
+    Node<String> o = new Node<String>("o").addPrevSibling(n);
+    Node<String> p = new Node<String>("p").addPrevSibling(o);
+    DoublyLinkedList<String> l = new DoublyLinkedList<String>(n, p);
+
+    Iterator<String> iter = l.iterator();
+
+    assert iter.next() == "n";
+    assert iter.next() == "o";
+    assert iter.next() == "p";
   }
 }

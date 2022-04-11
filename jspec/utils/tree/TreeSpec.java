@@ -1,10 +1,12 @@
 package jspec.utils.tree;
 
 import jspec.lib.Group;
+import jspec.lib.Runner;
 
 import java.util.Iterator;
 
 import jspec.utils.Node;
+import jspec.utils.ValueNotFound;
 import jspec.utils.list.DoublyLinkedList;
 
 public class TreeSpec extends Group {
@@ -12,23 +14,10 @@ public class TreeSpec extends Group {
 
   public static void main(String[] args) {
     TreeSpec spec = new TreeSpec();
-
-    spec
-      .visit()
-      .getResults()
-      .forEach(result -> {
-        System.out.print(result.getDescription());
-        System.out.print(" ");
-
-        if (result.didPass()) {
-          System.out.print("✅\n");
-        } else {
-          System.out.print("❌\n");
-          System.out.println();
-          result.getFailureExc().getCause().printStackTrace();
-          System.out.println();
-        }
-      });
+    new Runner(spec)
+      .run()
+      .resultStrings()
+      .forEach((node, i) -> System.out.println(node.getValue()));
   }
 
   public String descCreateTree = "Creating a tree adds given node as root";
@@ -285,6 +274,163 @@ public class TreeSpec extends Group {
     assert actual == 6 : "fourth node should be 6, not " + actual;
     actual = iter.next();
     assert actual == 5 : "fifth node should be 5, not " + actual;
+  }
+
+  public String descFindValueInTree = "A tree can find a given value in itself";
+  public void testFindValueInTree() {
+    /* Build a tree that looks like this:
+     *
+     *          1
+     *         /|\
+     *        2 3 4
+     *          |
+     *          5
+     */
+    Node<Integer> a = new Node<Integer>(1);
+    Tree<Integer> tree = new Tree<Integer>(a);
+    Node<Integer> b = new Node<Integer>(2);
+    Node<Integer> c = new Node<Integer>(3);
+    Node<Integer> d = new Node<Integer>(4);
+
+    tree.appendChild(b);
+    tree.appendChild(c);
+    tree.appendChild(d);
+
+    Tree<Integer> ctree = new Tree<Integer>(c);
+    Node<Integer> e = new Node<Integer>(5);
+
+    ctree.appendChild(e);
+
+     try {
+        assert tree.find(3) == c;
+     } catch (ValueNotFound exc) {
+         assert false : "Should have found node c";
+     }
+  }
+
+  public String descFindThrows = "Find throws error if value not found";
+  public void testFindThrows() {
+    /* Build a tree that looks like this:
+     *
+     *          1
+     *         /|\
+     *        2 3 4
+     *          |
+     *          5
+     */
+    Node<Integer> a = new Node<Integer>(1);
+    Tree<Integer> tree = new Tree<Integer>(a);
+    Node<Integer> b = new Node<Integer>(2);
+    Node<Integer> c = new Node<Integer>(3);
+    Node<Integer> d = new Node<Integer>(4);
+
+    tree.appendChild(b);
+    tree.appendChild(c);
+    tree.appendChild(d);
+
+    Tree<Integer> ctree = new Tree<Integer>(c);
+    Node<Integer> e = new Node<Integer>(5);
+
+    ctree.appendChild(e);
+
+     try {
+         tree.find(10);
+         assert false : "Value not in tree, should have thrown";
+     } catch (ValueNotFound exc) {
+         assert true;
+     }
+  }
+
+  public String descFindPredicate = "Find can accept a custom search predicate";
+  public void testFindPredicate() {
+    /* Build a tree that looks like this:
+     *
+     *          1
+     *         /|\
+     *        2 3 4
+     *          |
+     *          5
+     */
+    Node<Integer> a = new Node<Integer>(1);
+    Tree<Integer> tree = new Tree<Integer>(a);
+    Node<Integer> b = new Node<Integer>(2);
+    Node<Integer> c = new Node<Integer>(3);
+    Node<Integer> d = new Node<Integer>(4);
+
+    tree.appendChild(b);
+    tree.appendChild(c);
+    tree.appendChild(d);
+
+    Tree<Integer> ctree = new Tree<Integer>(c);
+    Node<Integer> e = new Node<Integer>(5);
+
+    ctree.appendChild(e);
+
+     try {
+         assert tree.find((node) -> node.getValue() == 5) == e;
+     } catch (ValueNotFound exc) {
+         assert false : "Should have found node e";
+     }
+  }
+
+  public String descContainsValue = "A Tree knows if it contains a given value";
+  public void testContainsValue() {
+    /* Build a tree that looks like this:
+     *
+     *          1
+     *         /|\
+     *        2 3 4
+     *          |
+     *          5
+     */
+    Node<Integer> a = new Node<Integer>(1);
+    Tree<Integer> tree = new Tree<Integer>(a);
+    Node<Integer> b = new Node<Integer>(2);
+    Node<Integer> c = new Node<Integer>(3);
+    Node<Integer> d = new Node<Integer>(4);
+
+    tree.appendChild(b);
+    tree.appendChild(c);
+    tree.appendChild(d);
+
+    Tree<Integer> ctree = new Tree<Integer>(c);
+    Node<Integer> e = new Node<Integer>(5);
+
+    ctree.appendChild(e);
+
+    assert tree.contains(5) : "Should have found node e";
+    assert !tree.contains(10) : "Should not have found a node";
+  }
+
+  public String descContainsPredicate = "Contains can use a search predicate";
+  public void testContainsPredicate() {
+    /* Build a tree that looks like this:
+     *
+     *          1
+     *         /|\
+     *        2 3 4
+     *          |
+     *          5
+     */
+    Node<Integer> a = new Node<Integer>(1);
+    Tree<Integer> tree = new Tree<Integer>(a);
+    Node<Integer> b = new Node<Integer>(2);
+    Node<Integer> c = new Node<Integer>(3);
+    Node<Integer> d = new Node<Integer>(4);
+
+    tree.appendChild(b);
+    tree.appendChild(c);
+    tree.appendChild(d);
+
+    Tree<Integer> ctree = new Tree<Integer>(c);
+    Node<Integer> e = new Node<Integer>(5);
+
+    ctree.appendChild(e);
+
+    assert tree.contains((node) -> node.getValue() == 5)
+      : "Should have found node e";
+    assert !tree.contains((node) -> node.getValue() == 10)
+      : "Should not have found a node";
   }
 }
 

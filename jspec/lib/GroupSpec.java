@@ -1,22 +1,16 @@
 package jspec.lib;
 
-import java.util.ArrayList;
+import jspec.utils.list.DoublyLinkedList;
 
 public class GroupSpec extends Group {
   final String desc = "class: Group";
 
   public static void main(String[] args) {
     GroupSpec spec = new GroupSpec();
-
-    spec
-      .visit()
-      .getResults()
-      .forEach(result -> System.out.println(
-        result.getDescription() +
-        " " +
-        (result.didPass()
-          ? "✅"
-          : "❌")));
+    new Runner(spec)
+      .run()
+      .resultStrings()
+      .forEach((node, i) -> System.out.println(node.getValue()));
   }
 
   String descTestDefinition = "A test is defined by declaring a method with the prefix 'test'";
@@ -38,7 +32,7 @@ public class GroupSpec extends Group {
 
     Multiple m = new Multiple();
 
-    assert m.visit().getResults().size() == 2;
+    assert m.visit().getResults().getLength() == 2;
   }
 
   String descTestFailure = "Evaluating a test captures failed assertions & alerts the user of a failed test";
@@ -51,7 +45,16 @@ public class GroupSpec extends Group {
 
     Failure f = new Failure();
 
-    assert f.visit().getResults().get(0).didPass() == false;
+    try {
+      assert f
+        .visit()
+        .getResults()
+        .get(0)
+        .getValue()
+        .didPass() == false;
+    } catch (NotATestResult exc) {
+      assert false : exc.getMessage();
+    }
   }
 
   String descDescriptiveGroupName = "A Group can have a more descriptive name";
@@ -81,7 +84,12 @@ public class GroupSpec extends Group {
     }
 
     MethodName m = new MethodName();
-    String actual = m.visit().getResults().get(0).getMethodName();
+    String actual = m
+      .visit()
+      .getResults()
+      .get(0)
+      .getValue()
+      .getCodeName();
 
     assert actual.compareTo("testATest") == 0;
   }
@@ -94,7 +102,11 @@ public class GroupSpec extends Group {
     }
 
     MethodName m = new MethodName();
-    String actual = m.visit().getResults().get(0).getDescription();
+    String actual = m
+      .visit()
+      .getResults().get(0)
+      .getValue()
+      .getDescription();
 
     assert actual.compareTo("a descriptive name") == 0;
   }
@@ -114,11 +126,32 @@ public class GroupSpec extends Group {
     }
 
     Example g = new Example();
-    ArrayList<Result> results = g.visit().getResults();
+    DoublyLinkedList<Result> results = g.visit().getResults();
 
-    assert results.get(0).didPass() : "first test passes";
-    assert results.get(1).didPass() : "second test passes";
-    assert !results.get(2).didPass() : "third test fails";
+    try {
+      Result result = results.get(0).getValue();
+      assert result.didPass() : "first test passes";
+      String actual = result.getCodeName();
+      String expected = "testA";
+      assert actual.compareTo(expected) == 0
+        : "Expected '" + actual + "' to equal '" + expected + "'";
+
+      result = results.get(1).getValue();
+      assert result.didPass() : "second test passes";
+      actual = result.getCodeName();
+      expected = "testB";
+      assert actual.compareTo(expected) == 0
+        : "Expected '" + actual + "' to equal '" + expected + "'";
+
+      result = results.get(2).getValue();
+      assert !result.didPass() : "third test fails";
+      actual = result.getCodeName();
+      expected = "testF";
+      assert actual.compareTo(expected) == 0
+        : "Expected '" + actual + "' to equal '" + expected + "'";
+    } catch (NotATestResult exc) {
+      assert false : exc.getMessage();
+    }
   }
 
   String descVisitReturnsNestedGroups = "Visiting a group also returns any nested Groups";
@@ -128,11 +161,9 @@ public class GroupSpec extends Group {
     }
 
     Example g = new Example();
-    ArrayList<Group> children = g.visit().getChildren();
+    DoublyLinkedList<Group> children = g.visit().getChildren();
 
-    assert children instanceof ArrayList
-      : "children should be an array list";
-    assert children.get(0) instanceof Group
-      : "members of children should be additional groups";
+    assert children.get(0).getValue().getClass() == Example.Nested.class
+      : "given group should be in returned list of children";
   }
 }

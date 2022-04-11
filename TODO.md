@@ -1,5 +1,7 @@
-- [ ] define TestGroup & write tests
-- [ ] define `Runner` & write tests
+- [x] define TestGroup & write tests
+- [\] define `Runner` & write tests
+  - [ ] refine output text appearance
+  - [ ] refine Group result output text
 - [ ] define `CLI` & write tests
 - [x] research Java packaging
   - more modern packaging is worth it for real world dev, use Gradle (preferred) or maybe Maven
@@ -16,8 +18,37 @@
     2. Call the Group's `before()` method, if defined
     3. Get the Group's Methods, then iterate over them:
       1. Call the Group's `beforeEach()` method, if defined
-      2. Evaluate the test & store the TestResult 
+      2. Evaluate the test & store the TestResult
         ^^ this indicates a need for some sort of tree of Results
       3. Call the Group's `afterEach()` method, if defined
     4. Call the Group's `after()` method, if defined
     5. Get the Group's nested Groups, & do repeat this process for each of them
+- [ ] figure out packaging as executable & library in single JAR
+- [ ] write presentation
+  - [ ] goals
+  - [ ] outline
+    - [ ] topics only
+    - [ ] add details
+    - [ ] refine to slides
+  - [ ] slides?
+  - [ ] live-coding?
+
+Principles used:
+
+- OOP
+  - Inheritance - Group & test definitions, ResultsTree & Tree<T>
+  - Encapsulation - Group, Result, Runner, Node<T>, Tree<T>, DoublyLinkedList<T> ...
+  - Aggregation - Node<T> & Node<Result>, Node<T> & Tree<T>, Node<T> & DoublyLinkedList<T>
+  - Composition - Tree<Result> & Runner
+  - Polymorphism - Tree/DoublyLinkedList w/ map, reduce, contains, etc... via FindPredicate, MapConsumer, ReduceConsumer, & ForEachConsumer
+- Data Structures
+  - custom implementations of:
+    - Doubly linked list
+    - n-ary tree
+  - use of:
+    - Stack
+    - ArrayList
+- Algorithms
+  - preorder traversal of n-ary tree, two ways (Group/sub-Groups & Tree<T>.reduce callers)
+  ? postorder traversal of n-ary tree
+  ? inorder traversal of n-ary tree

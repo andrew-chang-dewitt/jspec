@@ -23,6 +23,8 @@
       3. Call the Group's `afterEach()` method, if defined
     4. Call the Group's `after()` method, if defined
     5. Get the Group's nested Groups, & do repeat this process for each of them
+- [ ] Update PROPOSAL Algorithm section
+- [ ] Update UML
 - [ ] figure out packaging as executable & library in single JAR
 - [ ] write presentation
   - [ ] goals

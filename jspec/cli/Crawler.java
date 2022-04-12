@@ -1,27 +1,52 @@
 package jspec.cli;
 
+import java.lang.Override;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 
 import jspec.lib.Group;
 import jspec.utils.list.DoublyLinkedList;
 
-public class Crawler {
-  private DoublyLinkedList<Group> groups;
+public class Crawler extends SimpleFileVisitor<Path> {
+  private File start;
   private PathMatcher pattern;
+  private CrawlHandler handler;
+  private CrawlExcHandler excHandler;
 
-  public Crawler(String pattern) {
+  public Crawler(File start, String pattern) {
+    this.start = start;
     this.pattern = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
-    this.groups = new DoublyLinkedList<Group>();
   }
 
-  public Crawler crawl(File start) {
-    // needs to do the following:
-    // 1. walk the file tree starting at the given directory
-    // 2. for each file, compare if matches pattern
-    //   - if it does, compile the file, make sure the public
-    //     class is a Group, and add it to groups
-    //   - otherwise, do nothing with it
+  public Crawler crawl (
+    CrawlHandler handler, 
+    CrawlExcHandler excHandler
+  ) throws IOException {
+    this.handler = handler;
+    this.excHandler = excHandler;
+    Files.walkFileTree(this.start.toPath(), this);
+
+    return this;
+  }
+
+  @Override
+  public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+    if (this.pattern.matches(file)) {
+      this.handler.handle(file);
     }
+    return FileVisitResult.CONTINUE;
+  }
+
+  @Override
+  public FileVisitResult visitFileFailed(Path file, IOException exc) {
+    this.excHandler.handle(file, exc);
+    return FileVisitResult.CONTINUE;
+  }
 }

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.FileVisitResult;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
@@ -16,9 +17,9 @@ public class Crawler extends SimpleFileVisitor<Path> {
   private CrawlHandler handler;
   private CrawlExcHandler excHandler;
 
-  public Crawler(File start, PathMatcher pattern) {
+  public Crawler(File start, String pattern) {
     this.start = start;
-    this.pattern = pattern;
+    this.pattern = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
   }
 
   public Crawler crawl (

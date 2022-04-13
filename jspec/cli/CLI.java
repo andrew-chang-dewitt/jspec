@@ -4,78 +4,67 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.Class;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.concurrent.Callable;
 import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
+import jspec.vendor.picocli.CommandLine;
+import jspec.vendor.picocli.CommandLine.Command;
+import jspec.vendor.picocli.CommandLine.Option;
+import jspec.vendor.picocli.CommandLine.Parameters;
 
 import jspec.lib.Group;
 import jspec.lib.Runner;
 
-public class CLI {
+@Command(
+  name = "jspec",
+  mixinStandardHelpOptions = true,
+  description = "Discovers & runs tests in the current directory tree."
+)
+public class CLI implements Callable<Integer> {
   File cwd;
   Runner runner;
-  ArgParser args;
+
+  @Option(
+    names = { "-o", "--out", "--outfile" },
+    description = "A file to save the output to instead of printing to stdout."
+  )
+  File outFile;
+
+  @Option(
+    names = {"-c", "-concise"},
+    defaultValue = "false",
+    description = "Restrict output to concise reporting only; includes progress indicator, reports on any failures & stats, but skips reporting list of all tests ran. Defaults to ${DEFAULT-VALUE}."
+  )
+  boolean concise = false;
+
+  @Parameters(
+    index = "0",
+    defaultValue = "**/*Spec.java",
+    description = "Glob pattern for finding test files,\ndefaults to `${DEFAULT-VALUE}`."
+  )
+  String pattern;
+
+  @Override
+  public Integer call() {
+    this.discover(this.cwd, this.pattern);
+    this.run();
+
+    return 0;
+  }
 
   public static void main(String[] args) {
-    List<String> argsList = Arrays.asList(args);
-    if (argsList.contains("--help") || argsList.contains("-?")) {
-      CLI.usage();
-    } else {
-      try {
-        // initialize the CLI
-        CLI cli = new CLI(args);
-
-        // discover spec files & add to runner
-        cli.discover(cli.cwd, cli.args.getPattern());
-        // run the tests & print results
-        cli.run();
-      } catch (InvalidArgumentError exc) {
-        System.err.println(exc);
-        CLI.usage();
-      }
-    }
+    int exitCode = new CommandLine(new CLI()).execute(args);
+    System.exit(exitCode);
   }
 
-  static void usage() {
-    System.out.println("Usage: java -ea jspec [options]");
-    System.out.println("           (to run tests in any file matching the pattern \"**/*Spec.java\")");
-    System.out.println("   or  java -ea jspec [options] <pattern>");
-    System.out.println("           (to run tests in any file matching the given pattern)");
-    System.out.println("");
-    System.out.println("where options include:");
-    System.out.println("");
-    System.out.println("--help                  Print this message.");
-    System.out.println("  or -?");
-    System.out.println("--outFile=<file path>   Save output to file at given path.");
-    System.out.println("  or --out=<file path>  Outputs to stdout if not specified.");
-    System.out.println("  or -o=<file path>");
-    System.out.println("--verbose               Prints verbose output. Defaults to");
-    System.out.println("  or -v                 false.");
-    System.out.println("");
-  }
-
-  CLI(String[] args) throws InvalidArgumentError {
+  CLI() {
     this.runner = new Runner();
     this.cwd = new File(System.getProperty("user.dir"));
-    this.args = this.parse(args);
   }
 
-  ArgParser parse(String[] args) throws InvalidArgumentError {
-    ArgParser parser = new ArgParser();
-
-    for (String arg: args) {
-      if (arg.startsWith("-")) parser.arg(arg);
-      else parser.arg("--pattern=" + arg);
-    }
-
-    return parser;
-  }
-
-  void discover(File start, PathMatcher pattern) {
+  void discover(File start, String pattern) {
     try {
       // init empty list to hold list of found spec files
       ArrayList<Path> specFiles = new ArrayList<Path>();
@@ -100,12 +89,13 @@ public class CLI {
       // handle that here
       System.err.println("There was an error crawling the file tree: ");
       exc.printStackTrace();
-    } catch (CompilationError exc) {
-      exc.printStackTrace();
+    } catch (DiscoveryError exc) {
+      System.err.println(exc.getMessage());
+      System.err.println("Searched in " + this.cwd);
     }
   }
 
-  ArrayList<Group> compileAndInitFiles(ArrayList<Path> paths) throws CompilationError {
+  ArrayList<Group> compileAndInitFiles(ArrayList<Path> paths) throws DiscoveryError {
     // set up compiler & java file manager
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager fileManager =
@@ -116,18 +106,16 @@ public class CLI {
 
     // compile the file
     try {
-      boolean compiled = compiler.getTask(
-          null,
-          fileManager,
-          null,
-          null,
-          null,
-          fileManager.getJavaFileObjectsFromFiles(srcs)
-          ).call();
-
-      if (!compiled) throw new CompilationError();
+      compiler.getTask(
+        null,
+        fileManager,
+        null,
+        null,
+        null,
+        fileManager.getJavaFileObjectsFromFiles(srcs)
+        ).call();
     } catch (IllegalStateException exc) {
-      throw new CompilationError();
+      throw new DiscoveryError("No matching files found for pattern:\n   " + this.pattern);
     }
 
     // build list of Group instances for each src file
@@ -173,8 +161,8 @@ public class CLI {
   }
 }
 
-class CompilationError extends Exception {
-  CompilationError() {
-    super("Error encountered in compiling test files, see output above.");
+class DiscoveryError extends Exception {
+  DiscoveryError(String msg) {
+    super("Error encountered while discovering files: " + msg);
   }
 }

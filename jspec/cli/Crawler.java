@@ -4,15 +4,11 @@ import java.lang.Override;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-
-import jspec.lib.Group;
-import jspec.utils.list.DoublyLinkedList;
 
 public class Crawler extends SimpleFileVisitor<Path> {
   private File start;
@@ -20,13 +16,13 @@ public class Crawler extends SimpleFileVisitor<Path> {
   private CrawlHandler handler;
   private CrawlExcHandler excHandler;
 
-  public Crawler(File start, String pattern) {
+  public Crawler(File start, PathMatcher pattern) {
     this.start = start;
-    this.pattern = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
+    this.pattern = pattern;
   }
 
   public Crawler crawl (
-    CrawlHandler handler, 
+    CrawlHandler handler,
     CrawlExcHandler excHandler
   ) throws IOException {
     this.handler = handler;

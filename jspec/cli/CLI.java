@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.Class;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
@@ -15,29 +18,64 @@ import jspec.lib.Runner;
 public class CLI {
   File cwd;
   Runner runner;
+  ArgParser args;
 
   public static void main(String[] args) {
-    // initialize the CLI
-    CLI cli = new CLI();
+    List<String> argsList = Arrays.asList(args);
+    if (argsList.contains("--help") || argsList.contains("-?")) {
+      CLI.usage();
+    } else {
+      try {
+        // initialize the CLI
+        CLI cli = new CLI(args);
 
-    // FIXME: for now, both of the below are just the defaults ArgsParser will give
-    // FIXME: this will need to be updated to get the starting directory from ArgsParser
-    File start = cli.cwd;
-    // FIXME: and this to get the pattern from ArgsParser
-    String pattern =  "**/*Spec.java";
-
-    // discover spec files & add to runner
-    cli.discover(start, pattern);
-    // run the tests & print results
-    cli.run();
+        // discover spec files & add to runner
+        cli.discover(cli.cwd, cli.args.getPattern());
+        // run the tests & print results
+        cli.run();
+      } catch (InvalidArgumentError exc) {
+        System.err.println(exc);
+        CLI.usage();
+      }
+    }
   }
 
-  CLI() {
+  static void usage() {
+    System.out.println("Usage: java -ea jspec [options]");
+    System.out.println("           (to run tests in any file matching the pattern \"**/*Spec.java\")");
+    System.out.println("   or  java -ea jspec [options] <pattern>");
+    System.out.println("           (to run tests in any file matching the given pattern)");
+    System.out.println("");
+    System.out.println("where options include:");
+    System.out.println("");
+    System.out.println("--help                  Print this message.");
+    System.out.println("  or -?");
+    System.out.println("--outFile=<file path>   Save output to file at given path.");
+    System.out.println("  or --out=<file path>  Outputs to stdout if not specified.");
+    System.out.println("  or -o=<file path>");
+    System.out.println("--verbose               Prints verbose output. Defaults to");
+    System.out.println("  or -v                 false.");
+    System.out.println("");
+  }
+
+  CLI(String[] args) throws InvalidArgumentError {
     this.runner = new Runner();
     this.cwd = new File(System.getProperty("user.dir"));
+    this.args = this.parse(args);
   }
 
-  void discover(File start, String pattern) {
+  ArgParser parse(String[] args) throws InvalidArgumentError {
+    ArgParser parser = new ArgParser();
+
+    for (String arg: args) {
+      if (arg.startsWith("-")) parser.arg(arg);
+      else parser.arg("--pattern=" + arg);
+    }
+
+    return parser;
+  }
+
+  void discover(File start, PathMatcher pattern) {
     try {
       // init empty list to hold list of found spec files
       ArrayList<Path> specFiles = new ArrayList<Path>();
@@ -63,7 +101,6 @@ public class CLI {
       System.err.println("There was an error crawling the file tree: ");
       exc.printStackTrace();
     } catch (CompilationError exc) {
-      System.err.println(exc);
       exc.printStackTrace();
     }
   }
@@ -78,16 +115,20 @@ public class CLI {
     paths.forEach(path -> srcs.add(new File(path.toString())));
 
     // compile the file
-    boolean compiled = compiler.getTask(
-        null,
-        fileManager,
-        null,
-        null,
-        null,
-        fileManager.getJavaFileObjectsFromFiles(srcs)
-      ).call();
+    try {
+      boolean compiled = compiler.getTask(
+          null,
+          fileManager,
+          null,
+          null,
+          null,
+          fileManager.getJavaFileObjectsFromFiles(srcs)
+          ).call();
 
-    if (!compiled) throw new CompilationError();
+      if (!compiled) throw new CompilationError();
+    } catch (IllegalStateException exc) {
+      throw new CompilationError();
+    }
 
     // build list of Group instances for each src file
     ArrayList<Group> specs = new ArrayList<Group>();

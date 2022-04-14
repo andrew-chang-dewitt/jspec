@@ -9,7 +9,7 @@ public class NodeSpec extends Group {
   public static void main(String[] args) {
     NodeSpec spec = new NodeSpec();
     new Runner(spec)
-      .run()
+      .run(false)
       .resultStrings()
       .forEach((node, i) -> System.out.println(node.getValue()));
   }

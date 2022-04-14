@@ -1,8 +1,7 @@
 package jspec.lib;
 
-import java.util.Iterator;
-
 import jspec.utils.Node;
+import jspec.utils.list.DoublyLinkedList;
 import jspec.utils.ValueNotFound;
 
 public class RunnerSpec extends Group {
@@ -11,7 +10,7 @@ public class RunnerSpec extends Group {
   public static void main(String[] args) {
     RunnerSpec spec = new RunnerSpec();
     new Runner(spec)
-      .run()
+      .run(false)
       .resultStrings()
       .forEach((node, i) -> System.out.println(node.getValue()));
   }
@@ -67,7 +66,7 @@ public class RunnerSpec extends Group {
 
     try {
       assert r
-        .run()
+        .run(true)
         .getResults()
         .find(
           (node) -> node.getValue().getCodeName() == "testATest"
@@ -106,7 +105,7 @@ public class RunnerSpec extends Group {
     r.addGroup(new G2());
 
     // Run the runner & get the test results
-    ResultsTree results = r.run().getResults();
+    ResultsTree results = r.run(true).getResults();
 
     // The results should contain a node for each test group
     // Search for a group by checking if the result's codeName
@@ -143,7 +142,7 @@ public class RunnerSpec extends Group {
     r.addGroup(new G1());
 
     // Run the runner & get the test results
-    ResultsTree results = r.run().getResults();
+    ResultsTree results = r.run(true).getResults();
 
     // The results should contain a node for each test group
     try {
@@ -180,7 +179,7 @@ public class RunnerSpec extends Group {
       }
 
       public void testAnother() {
-        assert false;
+        assert false : "this fails";
       }
 
       class G2 extends Group {
@@ -195,60 +194,83 @@ public class RunnerSpec extends Group {
     r.addGroup(new G1());
 
     // Run the runner & get the results as list of strings
-    Iterator<String> strings = r.run().resultStrings().iterator();
+    DoublyLinkedList<String> actual = r.run(true).resultStrings();
 
-    String actual = strings.next();
-    String expected = "";
-    assert actual.compareTo(expected) == 0
-      : "Expected '" + actual + "' to equal '" + expected + "'";
+    DoublyLinkedList<String> expected = new DoublyLinkedList<String>()
+      .append("")            // should be padded w/ 3 empty lines
+      .append("")
+      .append("")
+      .append("G1")          // then contain the name of the first group
+      .append("testATest")   // then the name of the first test
+      .append("testAnother") // then the name of the second test
+      .append("")            // then be padded by an empty line
+      .append("G2")          // then contain the name of the inner group
+      .append("testInner")   // then contain the name of the inner test
+      .append("")                           // a failure is padded by two empty lines
+      .append("")
+      .append("=".repeat(80))               // then bordered by a line of `=`
+      .append("FAILURE: testAnother")       // contain FAILURE & the test name
+      .append("-".repeat(80))               // then bordered by a line of `-`
+      .append("AssertionError: this fails") // then the error type & message
+      .append("")                           // then padded by an empty line
+      .append("G1.testAnother");            // then contain the name of the group & test
 
-    actual = strings.next();
-    expected = "G1";
-    assert actual.contains(expected)
-      : "Expected " + actual + " to contain " + expected;
-    String prefix = "  ";
-    assert actual.startsWith(prefix)
-      : "Expected " + actual + " to start with " + prefix;
+    // loop over expected lines & compare to actual lines at the same index
+    expected.forEach((exp, idx) -> {
+      String actualVal = actual.get(idx).getValue();
 
-    actual = strings.next();
-    expected = "testATest";
-    assert actual.contains(expected)
-      : "Expected " + actual + " to contain " + expected;
-    prefix = "    ";
-    assert actual.startsWith(prefix)
-      : "Expected " + actual + " to start with " + prefix;
-    String pass = " ✅";
-    assert actual.endsWith(pass)
-      : "Expected " + actual + " to end with " + pass;
+      // because tests are evaluated in non-deterministic order w/in a
+      // single group, G1 could be followed by testATest or testAnother
+      // these tests occur at indexes 4 & 5, we'll test them differently
+      // the rest to allow for this possibility of changing order
+      if (idx != 4 && idx != 5) {
+        String expectedVal = exp.getValue();
 
-    actual = strings.next();
-    expected = "testAnother";
-    assert actual.contains(expected)
-      : "Expected " + actual + " to contain " + expected;
-    prefix = "    ";
-    assert actual.startsWith(prefix)
-      : "Expected " + actual + " to start with " + prefix;
-    String fail = " ❌";
-    assert actual.endsWith(fail)
-      : "Expected " + actual + " to end with " + fail;
+        // if expecting an empty line, test for equality
+        if (expectedVal.compareTo("") == 0)
+          assert actualVal.compareTo(expectedVal) == 0
+            : actualVal + " != " + expectedVal;
+        // otherwise test for actual containing the expected text
+        else
+          assert actualVal.contains(expectedVal)
+            : actualVal + " doesn't contain " + expectedVal;
+      } else {
+        // when testing indexes 4 & 5, we check that the actual value
+        // contains either the value at expected index 4 or the value
+        // at expected index 5
+        String exp4 = expected.get(4).getValue();
+        String exp5 = expected.get(5).getValue();
 
-    actual = strings.next();
-    expected = "G2";
-    assert actual.contains(expected)
-      : "Expected " + actual + " to contain " + expected;
-    prefix = "    ";
-    assert actual.startsWith(prefix)
-      : "Expected " + actual + " to start with " + prefix;
+        assert actualVal.contains(exp4) || actualVal.contains(exp5)
+          : actualVal + " doesn't contain " + exp4 + " or " + exp5;
+      }
+    });
 
-    actual = strings.next();
-    expected = "testInner";
-    assert actual.contains(expected)
-      : "Expected " + actual + " to contain " + expected;
-    prefix = "      ";
-    assert actual.startsWith(prefix)
-      : "Expected " + actual + " to start with " + prefix;
-    assert actual.endsWith(pass)
-      : "Expected " + actual + " to end with " + pass;
+    // finally test that the output ends with the stats
+    // starting w/ a border
+    int actualLength = actual.getLength();
+    String actualVal = actual.get(actualLength - 4).getValue();
+    String expectedVal = "=====";
+    assert actualVal.contains(expectedVal)
+      : actualVal + " doesn't contain " + expectedVal;
+
+    // then an empty line
+    actualVal = actual.get(actualLength - 3).getValue();
+    expectedVal = "";
+    assert actualVal.compareTo(expectedVal) == 0
+      : actualVal + " != " + expectedVal;
+
+    // then a count of how many tests passed out of the total
+    actualVal = actual.get(actualLength - 2).getValue();
+    expectedVal = "2/3 tests passed";
+    assert actualVal.compareTo(expectedVal) == 0
+      : actualVal + " != " + expectedVal;
+
+    // then ends w/ an empty line
+    actualVal = actual.get(actualLength - 1).getValue();
+    expectedVal = "";
+    assert actualVal.compareTo(expectedVal) == 0
+      : actualVal + " != " + expectedVal;
   }
 }
 

@@ -12,7 +12,7 @@ public class DoublyLinkedListSpec extends Group {
   public static void main(String[] args) {
     DoublyLinkedListSpec spec = new DoublyLinkedListSpec();
     new Runner(spec)
-      .run()
+      .run(false)
       .resultStrings()
       .forEach((node, i) -> System.out.println(node.getValue()));
   }
@@ -266,5 +266,41 @@ public class DoublyLinkedListSpec extends Group {
     assert iter.next() == "n";
     assert iter.next() == "o";
     assert iter.next() == "p";
+  }
+
+  public String descConcatTwoLists = "Two lists can be concatenated";
+  public void testConcatTwoLists() {
+    Node<String> n = new Node<String>("n");
+    Node<String> o = new Node<String>("o").addPrevSibling(n);
+    Node<String> p = new Node<String>("p").addPrevSibling(o);
+    DoublyLinkedList<String> l1 = new DoublyLinkedList<String>(n, p);
+
+    Node<String> q = new Node<String>("q");
+    Node<String> r = new Node<String>("r").addPrevSibling(q);
+    Node<String> s = new Node<String>("s").addPrevSibling(r);
+    DoublyLinkedList<String> l2 = new DoublyLinkedList<String>(q, s);
+
+    l1.concat(l2);
+
+    Iterator<String> iter = l1.iterator();
+
+    String actual = iter.next();
+    String expected = "n";
+    assert actual.compareTo(expected) == 0 : actual + " != " + expected;
+    actual = iter.next();
+    expected = "o";
+    assert actual.compareTo(expected) == 0 : actual + " != " + expected;
+    actual = iter.next();
+    expected = "p";
+    assert actual.compareTo(expected) == 0 : actual + " != " + expected;
+    actual = iter.next();
+    expected = "q";
+    assert actual.compareTo(expected) == 0 : actual + " != " + expected;
+    actual = iter.next();
+    expected = "r";
+    assert actual.compareTo(expected) == 0 : actual + " != " + expected;
+    actual = iter.next();
+    expected = "s";
+    assert actual.compareTo(expected) == 0 : actual + " != " + expected;
   }
 }

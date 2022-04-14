@@ -8,7 +8,7 @@ public class Result {
   private boolean testResult;
 
   private boolean pass;
-  private Exception exc;
+  private Throwable exc;
 
   Result(String codeName) {
     this.codeName = codeName;
@@ -28,7 +28,7 @@ public class Result {
     return this;
   }
 
-  public Result fail(Exception exc) {
+  public Result fail(Throwable exc) {
     this.testResult = true;
     this.pass = false;
     this.exc = exc;
@@ -36,6 +36,12 @@ public class Result {
     return this;
   }
 
+  public String getName() {
+    if (this.descName != null && this.descName != "")
+      return this.descName;
+
+    return this.codeName;
+  }
   public String getCodeName() {
     return this.codeName;
   }
@@ -54,7 +60,7 @@ public class Result {
     throw new NotATestResult(this.codeName, "didPass");
   }
 
-  public Exception getFailureExc() throws NotATestResult {
+  public Throwable getFailureExc() throws NotATestResult {
     if (this.isTest()) return this.exc;
 
     throw new NotATestResult(this.codeName, "getFailureExc");
@@ -66,9 +72,7 @@ public class Result {
 
   public String statusString(String prefix) {
     // text should be long description, if it exists
-    String text = this.getDescription() == "" || this.getDescription() == null
-      ? this.getCodeName()
-      : this.getDescription();
+    String text = this.getName();
 
     try {
       // symbol to indicate if test passed or failed
@@ -85,14 +89,26 @@ public class Result {
   }
 
   public DoublyLinkedList<String> failureStrings() throws NotATestResult {
+
     if (this.isTest()) {
       // create new list
-      return DoublyLinkedList
+      DoublyLinkedList<String> out = new DoublyLinkedList<String>()
+        .append("")
+        .append("")
+        .append("=".repeat(80))
+        .append("❌ FAILURE: " + this.getName())
+        .append("-".repeat(80))
+        .append(this.exc.toString())
+        .append("");
+
+      DoublyLinkedList<String> trace = DoublyLinkedList
         // from Throwable's stack trace array
         .fromArray(this.exc.getStackTrace())
         // then convert to list of strings
         // using StackTraceElement.toString()
-        .map((trc, idx) -> trc.toString());
+        .map((trc, idx) -> "        at " + trc.getValue().toString());
+
+      return out.concat(trace);
     }
 
     throw new NotATestResult(this.codeName, "failureStrings");

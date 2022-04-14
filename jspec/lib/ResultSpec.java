@@ -4,7 +4,7 @@ public class ResultSpec extends Group {
   public static void main(String[] args) {
     ResultSpec spec = new ResultSpec();
     new Runner(spec)
-      .run()
+      .run(false)
       .resultStrings()
       .forEach((node, i) -> System.out.println(node.getValue()));
   }

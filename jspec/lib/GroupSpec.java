@@ -8,7 +8,7 @@ public class GroupSpec extends Group {
   public static void main(String[] args) {
     GroupSpec spec = new GroupSpec();
     new Runner(spec)
-      .run()
+      .run(false)
       .resultStrings()
       .forEach((node, i) -> System.out.println(node.getValue()));
   }
@@ -32,7 +32,7 @@ public class GroupSpec extends Group {
 
     Multiple m = new Multiple();
 
-    assert m.visit().getResults().getLength() == 2;
+    assert m.visit(true).getResults().getLength() == 2;
   }
 
   String descTestFailure = "Evaluating a test captures failed assertions & alerts the user of a failed test";
@@ -47,7 +47,7 @@ public class GroupSpec extends Group {
 
     try {
       assert f
-        .visit()
+        .visit(true)
         .getResults()
         .get(0)
         .getValue()
@@ -85,7 +85,7 @@ public class GroupSpec extends Group {
 
     MethodName m = new MethodName();
     String actual = m
-      .visit()
+      .visit(true)
       .getResults()
       .get(0)
       .getValue()
@@ -103,7 +103,7 @@ public class GroupSpec extends Group {
 
     MethodName m = new MethodName();
     String actual = m
-      .visit()
+      .visit(true)
       .getResults().get(0)
       .getValue()
       .getDescription();
@@ -126,7 +126,7 @@ public class GroupSpec extends Group {
     }
 
     Example g = new Example();
-    DoublyLinkedList<Result> results = g.visit().getResults();
+    DoublyLinkedList<Result> results = g.visit(true).getResults();
 
     try {
       Result result = results.get(0).getValue();
@@ -161,7 +161,7 @@ public class GroupSpec extends Group {
     }
 
     Example g = new Example();
-    DoublyLinkedList<Group> children = g.visit().getChildren();
+    DoublyLinkedList<Group> children = g.visit(true).getChildren();
 
     assert children.get(0).getValue().getClass() == Example.Nested.class
       : "given group should be in returned list of children";

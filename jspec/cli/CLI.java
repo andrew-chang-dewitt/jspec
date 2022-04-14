@@ -155,7 +155,7 @@ public class CLI implements Callable<Integer> {
   }
 
   void run() {
-    this.runner.run();
+    this.runner.run(false);
     this.runner.resultStrings().forEach(
       (line, i) -> System.out.println(line.getValue()));
   }

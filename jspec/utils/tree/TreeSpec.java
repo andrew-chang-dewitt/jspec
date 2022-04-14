@@ -15,7 +15,7 @@ public class TreeSpec extends Group {
   public static void main(String[] args) {
     TreeSpec spec = new TreeSpec();
     new Runner(spec)
-      .run()
+      .run(false)
       .resultStrings()
       .forEach((node, i) -> System.out.println(node.getValue()));
   }

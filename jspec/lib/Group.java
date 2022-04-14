@@ -12,7 +12,7 @@ public class Group {
 
   protected String desc = null;
 
-  public VisitResults visit() {
+  public VisitResults visit(boolean silent) {
     // this.getClass() will return a Group or any descendent of it
     // using ? extends Group allows for that possibility
     Class<? extends Group> instanceClass = this.getClass();
@@ -20,13 +20,14 @@ public class Group {
     Class<?>[] nestedClasses = instanceClass.getDeclaredClasses();
 
     return new VisitResults(
-        this.evaluate(tests, instanceClass),
+        this.evaluate(tests, instanceClass, silent),
         this.findChildren(nestedClasses, this));
   }
 
   private DoublyLinkedList<Result> evaluate(
     Method[] tests,
-    Class<? extends Group> instanceClass
+    Class<? extends Group> instanceClass,
+    boolean silent
   ) {
     DoublyLinkedList<Result> results = new DoublyLinkedList<Result>();
 
@@ -43,10 +44,17 @@ public class Group {
         try {
           test.invoke(this);
           results.append(result.pass());
+          if (!silent) System.out.print('.');
         } catch (InvocationTargetException exc) {
-          results.append(result.fail(exc));
+          Throwable target = exc.getTargetException();
+          results.append(result.fail(target));
+          if (!silent) {
+            if (target instanceof AssertionError) System.out.print('F');
+            else System.out.print('E');
+          }
         } catch (IllegalAccessException exc) {
           results.append(result.fail(exc));
+          System.out.print('E');
         }
       }
     }

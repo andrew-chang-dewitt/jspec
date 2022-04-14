@@ -197,6 +197,13 @@ public class DoublyLinkedList<T> implements Iterable<T> {
   public Iterator<T> iterator() {
     return new DLLIterator<T>(this);
   }
+
+  public DoublyLinkedList<T> concat(DoublyLinkedList<T> other) {
+    this.tail.addNextSibling(other.head);
+    this.tail = other.tail;
+
+    return this;
+  }
 }
 
 class DLLIterator<T> implements Iterator<T> {

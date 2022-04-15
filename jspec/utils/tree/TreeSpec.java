@@ -10,7 +10,7 @@ import jspec.utils.ValueNotFound;
 import jspec.utils.list.DoublyLinkedList;
 
 public class TreeSpec extends Group {
-  final String desc = "utils.Node";
+  public String desc = "class: utils.tree.Tree";
 
   public static void main(String[] args) {
     TreeSpec spec = new TreeSpec();

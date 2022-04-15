@@ -1,6 +1,8 @@
 package jspec.lib;
 
 public class ResultSpec extends Group {
+  public String desc = "class: lib.Result";
+
   public static void main(String[] args) {
     ResultSpec spec = new ResultSpec();
     new Runner(spec)

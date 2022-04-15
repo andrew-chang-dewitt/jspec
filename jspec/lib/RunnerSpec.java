@@ -5,7 +5,7 @@ import jspec.utils.list.DoublyLinkedList;
 import jspec.utils.ValueNotFound;
 
 public class RunnerSpec extends Group {
-  final String desc = "class: Runner";
+  public String desc = "class: lib.Runner";
 
   public static void main(String[] args) {
     RunnerSpec spec = new RunnerSpec();

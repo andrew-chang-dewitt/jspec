@@ -55,7 +55,20 @@ public class Runner {
     boolean silent
   ) {
     // Add this Group as a Result child to the tree
-    String groupName = group.getClass().getName();
+    String groupDesc = null;
+
+    try {
+      groupDesc = (String)group.getClass().getField("desc").get(group);
+    } catch (IllegalAccessException exc) {
+      System.err.println("Warning: the `desc` field on a test Group must be public for it to be used by the test Runner.");
+      // do nothing, leave desc as null
+    } catch (NoSuchFieldException exc) {
+      // do nothing, leave desc as null
+    }
+
+    String groupName = groupDesc != null
+      ? groupDesc
+      : group.getClass().getName();
     Node<Result> currNode = new Node<Result>(new Result(groupName));
     tree.appendChild(currNode);
     // visit Group to execute tests & discover children

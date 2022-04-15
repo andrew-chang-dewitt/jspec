@@ -10,7 +10,7 @@ public class Group {
   static String testPrefix = "test";
   static String descPrefix = "desc";
 
-  protected String desc = null;
+  public String desc = null;
 
   public VisitResults visit(boolean silent) {
     // this.getClass() will return a Group or any descendent of it

@@ -4,7 +4,7 @@ import jspec.lib.Group;
 import jspec.lib.Runner;
 
 public class NodeSpec extends Group {
-  final String desc = "utils.Node";
+  public String desc = "class: utils.Node";
 
   public static void main(String[] args) {
     NodeSpec spec = new NodeSpec();
@@ -76,7 +76,7 @@ public class NodeSpec extends Group {
   }
 
   public class ChildNodes extends Group {
-    final String desc = "A Node knows its child Nodes";
+    public String desc = "A Node knows its child Nodes";
 
     public String descKnowsHead = "A Node has a head child";
     public void testKnowsHead() {

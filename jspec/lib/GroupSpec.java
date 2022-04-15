@@ -3,7 +3,7 @@ package jspec.lib;
 import jspec.utils.list.DoublyLinkedList;
 
 public class GroupSpec extends Group {
-  final String desc = "class: Group";
+  public String desc = "class: lib.Group";
 
   public static void main(String[] args) {
     GroupSpec spec = new GroupSpec();

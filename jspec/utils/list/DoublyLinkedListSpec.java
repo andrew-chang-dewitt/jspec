@@ -7,7 +7,7 @@ import java.util.Iterator;
 import jspec.utils.Node;
 
 public class DoublyLinkedListSpec extends Group {
-  final String desc = "utils.LinkedList";
+  public String desc = "class: utils.list.DoublyLinkedList";
 
   public static void main(String[] args) {
     DoublyLinkedListSpec spec = new DoublyLinkedListSpec();

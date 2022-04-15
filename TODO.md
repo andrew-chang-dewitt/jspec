@@ -7,31 +7,23 @@ Symbols:
 
 List:
 
-- [x] define TestGroup & write tests
-- [-] define `Runner` & write tests
-  - [ ] refine output text appearance
-  - [ ] refine Group result output text
-- [/] define `CLI` & write tests
-- [x] research Java packaging
-  - more modern packaging is worth it for real world dev, use Gradle (preferred) or maybe Maven
-  - not necessary for this project though, can just use make to handle compiling, building, & testing; can even create target that "installs" jspec to PATH to make it globally available or locally installs using direnv (if available)
-- [ ] do more research on asynchronous Java programming
-- [x] research tree structures
-  - it appears that writing groups as a class containing tests as methods is trivial
-  - using nested classes as a way of logically grouping tests that belong as a sub group becomes a tree
-  - can get test methods using `groupInstance.getClass().getDeclaredMethods()`
-  - can get nested group classes using `parentGroupInstance.getClass().getDeclaredClasses()`
-  - can get Group attributes like `description` using `groupInstance.getClass().getDeclaredField("description")`
-  - traversing the test tree will be [preorder traversal](http://cs360.cs.ua.edu/lectures-new/36%20Non-Binary%20Trees%20and%20Traversals.pdf), doing the following for each Node (a Group)
-    1. Get the Group's `description` field, or Class name if no description
-    2. Call the Group's `before()` method, if defined
-    3. Get the Group's Methods, then iterate over them:
-      1. Call the Group's `beforeEach()` method, if defined
-      2. Evaluate the test & store the TestResult
-        ^^ this indicates a need for some sort of tree of Results
-      3. Call the Group's `afterEach()` method, if defined
-    4. Call the Group's `after()` method, if defined
-    5. Get the Group's nested Groups, & do repeat this process for each of them
+- [x] A User defines a group of tests as methods belonging to a class.
+- [x] A User describes a group of tests by giving a string description as the `desc` property on the class.
+- [x] A User describes a test method by declaring it with a descriptive name, beginning with the prefix `test`.
+- [x] A User can nest groups of tests by declaring a nested class.
+- [ ] A User can define code that needs to be run once before executing a group of tests by defining a method called `before`.
+- [ ] A User can define code that needs to be run before each test in a group of tests by defining a method called `beforeEach`.
+- [ ] A User can define code that needs to be run once after executing a group of tests by defining a method called `after`.
+- [ ] A User can define code that needs to be run after each test in a group of tests by defining a method called `afterEach`.
+- [x] A User can run a test class (& any nested classes) manually by defining a main() method that creates an instance of itself, passes it to Runner instance, & calls the Runner's run() method.
+- [x] A User receives a concise indicator of test result status after running a test class with a '.' to indicate a successful test & an 'F' to indicate a failure.
+- [x] A User receives a count of successful tests out of total tests at the end of the report.
+- [x] A User receives details about any failed test, including the test class name, test method name, failure reason (exception name & message), & any stack trace.
+- [x] A User recieves a verbose output of test result status, consisting of the test class name, followed by a list of test method names & "Success" or "Failure", depending on the result.
+- [ ] A User can opt not to receive the verbose output
+- [x] A User can use a cli command (`java -ea jspec.cli.CLI`, or use the shell script `./jspec`) to have jspec recursively traverse a given (could default to PWD or project) directory & subdirectories & discover any files ending in `Spec.java`, then run the tests for all files found.
+- [x] A User can give a glob pattern to use when searching for spec files, replacing the default `Spec.java` pattern.
+- [x] A User can specify a single test file to run.
 - [ ] Update PROPOSAL Algorithm section
 - [ ] Update UML
 - [ ] figure out packaging as executable & library in single JAR

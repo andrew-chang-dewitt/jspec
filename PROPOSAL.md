@@ -134,32 +134,9 @@ Sample output for each part below.
 ```
 ================================================================================
 ❌ FAILURE: Some group name/description: Some test name/description
-================================================================================
+--------------------------------------------------------------------------------
 
 SomeErrorType: An error message
-
-Possible detailed error messaging
-can go here, e.g.
-1 != 0
-or 
-  Line same
-+ Line differentA
-- Line differentB
-  Line same
-  Line same
-
---------------------------------------------------------------------------------
-
-Captured stdout: 
-
-Some captured output from System.out.* calls
-More output
-
---------------------------------------------------------------------------------
-
-Stack trace:
-
-Stack trace output follows last
   Some Method() nn:mm in SomeModule
   Some Method() nn:mm on SomeClass
   Some Method() nn:mm in SomeModule
@@ -168,8 +145,6 @@ Stack trace output follows last
   Some Method() nn:mm on SomeClass
   Some Method() nn:mm in SomeModule
   Some Method() nn:mm on SomeClass
-
-================================================================================
 
 ```
 
@@ -179,21 +154,21 @@ Assume 4 Groups, A, B, C, & D.
 C is nested in B, & B is nested in A; D is unrelated.
 
 ```
-Group A
+Group A description
   Some test description ✅
   Another test description ❌
   testATestMethodName ✅
   testSomeOtherTest ❌
 
-    Group B
+    Group B description
       Some test description ✅
       Another test description ❌
 
-      Group C
+      Group C description
         Some test description ✅
         testSomeOtherTest ✅
 
-Group D
+Group D description
   Some test description ✅
   Another test description ✅
   testATestMethodName ✅
@@ -206,13 +181,19 @@ Group D
 Some failure(s):
 
 ```
+================================================================================
+
 9/15 Passed
+
 ```
 
 No failures:
 
 ```
-15/15 Passed! 
+================================================================================
+
+15/15 Passed!
+
 ```
 
 

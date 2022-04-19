@@ -663,13 +663,12 @@ _**public static main(String[] args) -> void**_
 **Data structures:**
 
 - ArrayList
-- Linked Lists
-- Trees
+- Doubly Linked Lists
+- n-ary Trees
 
 **Algorithms:**
 
 - preorder tree traversal
-- _**stretch goal:**_ some sort of sorting algo (for sorting tests/results?)
 
 
 

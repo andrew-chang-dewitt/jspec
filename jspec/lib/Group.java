@@ -12,6 +12,16 @@ public class Group {
 
   public String desc = null;
 
+  public void before() {
+    // does nothing by default
+    // defined in Group so that it can be called in evaluate()
+  }
+
+  public void after() {
+    // does nothing by default
+    // defined in Group so that it can be called in evaluate()
+  }
+
   public VisitResults visit(boolean silent) {
     // this.getClass() will return a Group or any descendent of it
     // using ? extends Group allows for that possibility
@@ -30,6 +40,9 @@ public class Group {
     boolean silent
   ) {
     DoublyLinkedList<Result> results = new DoublyLinkedList<Result>();
+
+    // perform setup tasks before executing any tests
+    this.before();
 
     for (Method test : tests) {
       String name = test.getName();
@@ -58,6 +71,9 @@ public class Group {
         }
       }
     }
+
+    // perform setup tasks before executing any tests
+    this.after();
 
     return results;
   }

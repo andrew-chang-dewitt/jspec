@@ -178,4 +178,96 @@ public class GroupSpec extends Group {
         : "given group should be in returned list of children";
     }
   }
+
+  public class Before extends Group {
+    public String desc = "A Group can perform setup code before running any tests";
+
+    public String descDefaultsToNoOp = "Nothing happens if a before() method is not defined";
+    public void testDefaultsToNoOp() {
+      class Test extends Group {
+        int state = 0;
+
+        public void testState() {
+          assert this.state == 1;
+        }
+      }
+
+      Test t = new Test();
+      Result r = t.visit(true).getResults().get(0).getValue();
+
+      try {
+        assert !r.didPass() : "state was modified when it shouldn't have been";
+      } catch (NotATestResult exc) {
+        assert false : "this shouldn't happen";
+      }
+    }
+
+    public String descPerformsSetup = "Defining before() can perform setup tasks";
+    public void testPerformsSetup () {
+      class Test extends Group {
+        int state = 0;
+
+        public void before() {
+          ++this.state;
+        }
+
+        public void testState() {
+          assert this.state == 1;
+        }
+      }
+
+      Test t = new Test();
+      Result r = t.visit(true).getResults().get(0).getValue();
+
+      try {
+        assert r.didPass() : "state was not modified when it should have been";
+      } catch (NotATestResult exc) {
+        assert false : "this shouldn't happen";
+      }
+    }
+  }
+
+  public class After extends Group {
+    public String desc = "A Group can perform teardown code after running all tests";
+
+    public String descDefaultsToNoOp = "Nothing happens if a after() method is not defined";
+    public void testDefaultsToNoOp() {
+      class Test extends Group {
+        public int state = 0;
+
+        public void testState() {
+          ++this.state;
+
+          assert this.state == 1;
+        }
+      }
+
+      Test t = new Test();
+      t.visit(true);
+
+      assert t.state == 1 : "state was modified when it shouldn't have been";
+    }
+
+    public String descPerformsTeardown = "Defining after() can perform teardown tasks";
+    public void testPerformsTeardown () {
+      class Test extends Group {
+        public int state = 0;
+
+        public void testState() {
+          ++this.state;
+
+          assert this.state == 1;
+        }
+
+        public void after() {
+          this.state = 0;
+        }
+      }
+
+      Test t = new Test();
+      t.visit(true);
+
+      assert t.state == 0 : "state wasn't modified when it should have been";
+    }
+  }
 }

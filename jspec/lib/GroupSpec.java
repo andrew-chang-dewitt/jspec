@@ -270,4 +270,178 @@ public class GroupSpec extends Group {
       assert t.state == 0 : "state wasn't modified when it should have been";
     }
   }
+
+  public class BeforeEach extends Group {
+    public String desc = "A Group can perform setup before each test using beforeEach()";
+
+    public class Default extends Group {
+      public String desc = "Default behaviour when beforeEach() is not implemented()";
+
+      public String descDefaultsToNoOp = "Nothing happens";
+      public void testDefaultsToNoOp() {
+        class Test extends Group {
+          public int state = 0;
+
+          public void test1() {
+            assert this.state == 1;
+          }
+
+          public void test2() {
+            assert this.state == 2;
+          }
+        }
+
+        Test t = new Test();
+        DoublyLinkedList<Result> results = t.visit(true).getResults();
+        Result r1 = results.get(0).getValue();
+        Result r2 = results.get(1).getValue();
+
+        try {
+          assert !r1.didPass() : "state was modified when it shouldn't have been";
+          assert !r2.didPass() : "state was modified when it shouldn't have been";
+        } catch (NotATestResult exc) {
+          assert false : "this shouldn't happen";
+        }
+      }
+    }
+
+    public class Implemented extends Group {
+      public String desc= "Behaviour when beforeEach() is implemented";
+
+      Group t;
+      DoublyLinkedList<Result> r;
+      int counter = 0;
+
+      public void before() {
+        // define & init a test Group
+        class Test extends Group {
+          public void beforeEach() {
+            // increment the counter in Implemented each time a test
+            // is run in this Test Group
+            ++counter;
+          }
+
+          public void test1() {
+            // should be 1 the first time
+            assert counter == 1;
+          }
+
+          public void test2() {
+            // should be 2 the first time
+            assert counter == 2;
+          }
+        }
+        this.t = new Test();
+
+        // then run it & get the results
+        this.r = this.t.visit(true).getResults();
+      }
+
+      public String descRunsForEachTest = "Runs once for each test";
+      public void testRunsForEachTest () {
+        assert this.counter == 2
+          : "state should be 2, was " + this.counter;
+      }
+
+      public String descRunsBeforeTheTest = "Runs before the test";
+      public void testRunsBeforeTheTest  () {
+        Result r1 = this.r.get(0).getValue();
+        Result r2 = this.r.get(1).getValue();
+
+        try {
+          assert r1.didPass() : "state should be 1 for the first test";
+          assert r2.didPass() : "state should be 2 for the second test";
+        } catch (NotATestResult exc) {
+          assert false : "this should never happen";
+        }
+      }
+    }
+  }
+
+  public class AfterEach extends Group {
+    public String desc = "A Group can perform teardown after each test using afterEach()";
+
+    public class Default extends Group {
+      public String desc = "Default behaviour when afterEach() is not implemented()";
+
+      public String descDefaultsToNoOp = "Nothing happens";
+      public void testDefaultsToNoOp() {
+        class Test extends Group {
+          public int state = 0;
+
+          public void test1() {
+            assert this.state == 1;
+          }
+
+          public void test2() {
+            assert this.state == 2;
+          }
+        }
+
+        Test t = new Test();
+        DoublyLinkedList<Result> results = t.visit(true).getResults();
+        Result r1 = results.get(0).getValue();
+        Result r2 = results.get(1).getValue();
+
+        try {
+          assert !r1.didPass() : "state was modified when it shouldn't have been";
+          assert !r2.didPass() : "state was modified when it shouldn't have been";
+        } catch (NotATestResult exc) {
+          assert false : "this shouldn't happen";
+        }
+      }
+    }
+
+    public class Implemented extends Group {
+      public String desc= "Behaviour when afterEach() is implemented";
+
+      Group t;
+      DoublyLinkedList<Result> r;
+      int counter = 0;
+
+      public void before() {
+        // define & init a test Group
+        class Test extends Group {
+          public void afterEach() {
+            // increment the counter in Implemented each time a test
+            // is run in this Test Group
+            ++counter;
+          }
+
+          public void test1() {
+            // should be 0 the first time
+            assert counter == 0;
+          }
+
+          public void test2() {
+            // should be 1 the first time
+            assert counter == 1;
+          }
+        }
+        this.t = new Test();
+
+        // then run it & get the results
+        this.r = this.t.visit(true).getResults();
+      }
+
+      public String descRunsForEachTest = "Runs once for each test";
+      public void testRunsForEachTest () {
+        assert this.counter == 2
+          : "state should be 2, was " + this.counter;
+      }
+
+      public String descRunsBeforeTheTest = "Runs after the test";
+      public void testRunsBeforeTheTest  () {
+        Result r1 = this.r.get(0).getValue();
+        Result r2 = this.r.get(1).getValue();
+
+        try {
+          assert r1.didPass() : "state should be 1 for the first test";
+          assert r2.didPass() : "state should be 2 for the second test";
+        } catch (NotATestResult exc) {
+          assert false : "this should never happen";
+        }
+      }
+    }
+  }
 }

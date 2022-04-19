@@ -11,10 +11,10 @@ List:
 - [x] A User describes a group of tests by giving a string description as the `desc` property on the class.
 - [x] A User describes a test method by declaring it with a descriptive name, beginning with the prefix `test`.
 - [x] A User can nest groups of tests by declaring a nested class.
-- [ ] A User can define code that needs to be run once before executing a group of tests by defining a method called `before`.
-- [ ] A User can define code that needs to be run before each test in a group of tests by defining a method called `beforeEach`.
-- [ ] A User can define code that needs to be run once after executing a group of tests by defining a method called `after`.
-- [ ] A User can define code that needs to be run after each test in a group of tests by defining a method called `afterEach`.
+- [x] A User can define code that needs to be run once before executing a group of tests by defining a method called `before`.
+- [x] A User can define code that needs to be run before each test in a group of tests by defining a method called `beforeEach`.
+- [x] A User can define code that needs to be run once after executing a group of tests by defining a method called `after`.
+- [x] A User can define code that needs to be run after each test in a group of tests by defining a method called `afterEach`.
 - [x] A User can run a test class (& any nested classes) manually by defining a main() method that creates an instance of itself, passes it to Runner instance, & calls the Runner's run() method.
 - [x] A User receives a concise indicator of test result status after running a test class with a '.' to indicate a successful test & an 'F' to indicate a failure.
 - [x] A User receives a count of successful tests out of total tests at the end of the report.

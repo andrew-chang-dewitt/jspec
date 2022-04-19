@@ -17,6 +17,16 @@ public class Group {
     // defined in Group so that it can be called in evaluate()
   }
 
+  public void beforeEach() {
+    // does nothing by default
+    // defined in Group so that it can be called in evaluate()
+  }
+
+  public void afterEach() {
+    // does nothing by default
+    // defined in Group so that it can be called in evaluate()
+  }
+
   public void after() {
     // does nothing by default
     // defined in Group so that it can be called in evaluate()
@@ -55,7 +65,9 @@ public class Group {
         }
 
         try {
+          this.beforeEach();
           test.invoke(this);
+          this.afterEach();
           results.append(result.pass());
           if (!silent) System.out.print('.');
         } catch (InvocationTargetException exc) {

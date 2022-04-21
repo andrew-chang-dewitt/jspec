@@ -1,5 +1,6 @@
 package jspec.lib;
 
+import java.text.DecimalFormat;
 import jspec.utils.Node;
 import jspec.utils.list.DoublyLinkedList;
 
@@ -85,18 +86,27 @@ public class Runner {
   }
 
   public DoublyLinkedList<String> resultStrings() {
+    return this.resultStrings(false);
+  }
+
+  public DoublyLinkedList<String> resultStrings(boolean concise) {
     ResultsStringParts res = this.results.reduce(
       (parts, node, depth) -> {
         Result result = node.getValue();
 
         // pad groups with an empty line before them
-        if (!result.isTest()) parts.statuses.append("");
+        if (!result.isTest()) {
+          // as long as the output is verbose
+          if (!concise) parts.statuses.append("");
+        }
         // otherwise increment the test counter
         else ++this.totalTests;
 
-        // add the result's status string to the statuses list
-        parts.statuses.append(
-          result.statusString(this.indent.repeat(depth)));
+        if (!concise) {
+          // add the result's status string to the statuses list
+          parts.statuses.append(
+              result.statusString(this.indent.repeat(depth)));
+        }
 
         try {
           if (!result.didPass()) {
@@ -128,8 +138,15 @@ public class Runner {
 
     String stats = passed + "/" + this.totalTests + " tests passed";
 
+    DecimalFormat df = new DecimalFormat("###.#%");
+    String percPassed = df.format(
+      Integer.valueOf(passed).floatValue()
+      / Integer.valueOf(this.totalTests).floatValue());
+
     if (passed == this.totalTests)
       stats += "!";
+    else
+      stats += " (" + percPassed + ")";
 
     return new DoublyLinkedList<String>()
       .append("")
@@ -146,7 +163,7 @@ class ResultsStringParts {
   DoublyLinkedList<String> statistics;
 
   ResultsStringParts() {
-    this.statuses = new DoublyLinkedList<String>();
+    this.statuses = new DoublyLinkedList<String>().append("");
     this.failures = new DoublyLinkedList<String>();
     this.statistics = new DoublyLinkedList<String>();
   }

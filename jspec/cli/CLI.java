@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.Class;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import javax.tools.JavaCompiler;
@@ -33,7 +35,7 @@ public class CLI implements Callable<Integer> {
   File outFile;
 
   @Option(
-    names = {"-c", "-concise"},
+    names = {"-c", "--concise"},
     defaultValue = "false",
     description = "Restrict output to concise reporting only; includes progress indicator, reports on any failures & stats, but skips reporting list of all tests ran. Defaults to ${DEFAULT-VALUE}."
   )
@@ -48,8 +50,32 @@ public class CLI implements Callable<Integer> {
 
   @Override
   public Integer call() {
+    // start tracking time
+    Instant start = Instant.now();
+
+    // discover & compile test classes
     this.discover(this.cwd, this.pattern);
+
+    // mark time compilation & discovery was completed
+    Instant compiled = Instant.now();
+    // get time duration taken to discover & compile tests
+    Duration compileTime = Duration.between(start, compiled);
+
+    // run tests
     this.run();
+
+    // get time duration taken to run tests
+    Duration runTime = Duration.between(compiled, Instant.now());
+    // get total time taken
+    Duration totalTime = Duration.between(start, Instant.now());
+
+    // report times to user
+    // first report total time
+    System.out.println("Total time: " + totalTime.toMillis() + " ms");
+    // then compilation time
+    System.out.println("Test discovery/compilation time: " + compileTime.toMillis() + " ms");
+    // then run time
+    System.out.println("Test execution time: " + runTime.toMillis() + " ms");
 
     return 0;
   }
@@ -156,7 +182,7 @@ public class CLI implements Callable<Integer> {
 
   void run() {
     this.runner.run(false);
-    this.runner.resultStrings().forEach(
+    this.runner.resultStrings(this.concise).forEach(
       (line, i) -> System.out.println(line.getValue()));
   }
 }

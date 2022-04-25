@@ -20,7 +20,7 @@ List:
 - [x] A User receives a count of successful tests out of total tests at the end of the report.
 - [x] A User receives details about any failed test, including the test class name, test method name, failure reason (exception name & message), & any stack trace.
 - [x] A User recieves a verbose output of test result status, consisting of the test class name, followed by a list of test method names & "Success" or "Failure", depending on the result.
-- [ ] A User can opt not to receive the verbose output
+- [x] A User can opt not to receive the verbose output
 - [x] A User can use a cli command (`java -ea jspec.cli.CLI`, or use the shell script `./jspec`) to have jspec recursively traverse a given (could default to PWD or project) directory & subdirectories & discover any files ending in `Spec.java`, then run the tests for all files found.
 - [x] A User can give a glob pattern to use when searching for spec files, replacing the default `Spec.java` pattern.
 - [x] A User can specify a single test file to run.

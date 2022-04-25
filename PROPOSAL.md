@@ -7,7 +7,7 @@ A simple unit testing library for TDD & a cli for running tests.
 
 - **Intended User:** Java developers to write & evaluate unit tests.
 - **Problem solved:** Unit test writing & evaluation.
-- **Technologies needed:** CLI commands, file i/0, & output to stdout
+- **Technologies needed:** CLI commands, file i/0, programmatic/dynamic compilation, & output to stdout
 
 
 
@@ -38,8 +38,9 @@ Encompasses features for executing tests, evaluating for success or failure, & c
 - A User can run a test class (& any nested classes) manually by defining a main() method that creates an instance of itself & calls the instance's run() method.
 - A User receives a concise indicator of test result status after running a test class with a '.' to indicate a successful test & an 'F' to indicate a failure.
 - A User receives a count of successful tests out of total tests at the end of the report.
+- A User receives a detailed report consisting of the test class name, followed by a list of test method names & success or failure indicators, depending on the result.
 - A User receives details about any failed test, including the test class name, test method name, failure reason (exception name & message), & any stack trace.
-- A User can opt to receive a concise output of test result status, consisting of the test class name, followed by a list of test method names & "Success" or "Failure", depending on the result.
+- A User can opt to receive a concise output of test result status, skipping the printing of each test group or test method's text and status
 
 ### Test discovery
 
@@ -191,18 +192,6 @@ A UML diagram is provided here, with more details about each class below it.
 - One Crawler aggregates one to many Group
 - One CLI composes one Crawler
 - One CLI composes one ArgParser
-
-_**Stretch Goal:**_
-
-There might be room to abstract the tree behavior of Runner/Group & Tree/Node into an interface that each pairing implements.
-Both will structure their Nodes slightly differently though:
-
-1. Group discovers child node Groups by calling Class.getDeclaredClasses(), which returns an array of more Group classes.
-  Each sibling Group doesn't have a reference to its other siblings.
-2. Node discovers child node Nodes by accessing the head or tail Child reference, then iterating using the next or previous Sibling references.
-
-This difference leads to any "abstraction" of the tree behavior being mostly limited to a traversal method, but it will have to be at least partially virtual, as both have some differences in their traversal methods.
-
 
 ### Group
 

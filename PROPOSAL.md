@@ -3,8 +3,6 @@ JSpec testing library
 
 A final project by Andrew Chang-DeWitt for CSCI 24000 at IUPUI, Spring 2022.
 
-_**Note**_: See a maintained version of this proposal document [on GitHub at andrew-chang-dewitt/jspec/blob/main/PROPOSAL.md](https://github.com/andrew-chang-dewitt/jspec/blob/main/PROPOSAL.md) for the most up to date version.
-
 A simple unit testing library for TDD & a cli for running tests.
 
 - **Intended User:** Java developers to write & evaluate unit tests.
@@ -31,36 +29,7 @@ Encompasses features that are used to write, group, set up, & tear down tests.
 - A User can define code that needs to be run once before executing a group of tests by defining a method called `before`.
 - A User can define code that needs to be run before each test in a group of tests by defining a method called `beforeEach`.
 - A User can define code that needs to be run once after executing a group of tests by defining a method called `after`.
-- A User can define code that needs to be run after each test in a group of tests by defining a method called `afterEach`.
-
-#### _**Stretch goal:**_ Improved assertions
-
-I'd like to have some features that are used to manage assertions.
-It'd be nice to keep them simple (using basic `assert` keyword & assoc. syntax), but grant some nice features around the error messaging on failure.
-Also would be nice to have some ability to have multiple assertions in one test and still check all when a preceding one fails.
-
-Any sort of chaining of assertions or execution of multiple assertions will require an assertions library or some sort of preprocessor macro, e.g.:
-
-
-```java
-// … using multiple assertions
-
-// plain assert statements with preprocessor
-assert true : “this will pass”;
-assert false : “this will fail”;
-assert true : “this will pass after the failure”;
-
-// or assertion library with methods
-// something like
-new Expect(1).to.eq(1);
-new Expect(2).to.eq(1);
-new Expect(1
-).to.eq(1);
-
-// either one should output should indicate the test failed, with a count of “sub-tests” or assertions indicating 2/3 passed
-```
-
-At the end of the day, either of those examples will require some sort of “sub test” feature. Implementing any sort of assertions library (the second example) will probably be a later, separate project.
+- A User can define code that needs to be run after each test in a group of tests by defining a method called `afterEach`
 
 ### Test running
 
@@ -70,7 +39,7 @@ Encompasses features for executing tests, evaluating for success or failure, & c
 - A User receives a concise indicator of test result status after running a test class with a '.' to indicate a successful test & an 'F' to indicate a failure.
 - A User receives a count of successful tests out of total tests at the end of the report.
 - A User receives details about any failed test, including the test class name, test method name, failure reason (exception name & message), & any stack trace.
-- A User can opt to receive a verbose output of test result status, consisting of the test class name, followed by a list of test method names & "Success" or "Failure", depending on the result.
+- A User can opt to receive a concise output of test result status, consisting of the test class name, followed by a list of test method names & "Success" or "Failure", depending on the result.
 
 ### Test discovery
 
@@ -183,7 +152,7 @@ Some failure(s):
 ```
 ================================================================================
 
-9/15 Passed
+9/15 (60%) Passed
 
 ```
 
@@ -192,7 +161,7 @@ No failures:
 ```
 ================================================================================
 
-15/15 Passed!
+15/15 (100%) Passed!
 
 ```
 

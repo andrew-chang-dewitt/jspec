@@ -1,6 +1,9 @@
 package jspec.utils.list;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.lang.IndexOutOfBoundsException;
+
 import jspec.utils.Node;
 import jspec.utils.ForEachConsumer;
 import jspec.utils.MapConsumer;
@@ -49,13 +52,6 @@ public class DoublyLinkedList<T> implements Iterable<T> {
     }, 0);
   }
 
-  public Node<T> get(int index) {
-    return this.reduce((a, x, i) -> {
-      if (i == index) return x;
-      else return a;
-    }, null);
-  }
-
   public DoublyLinkedList<T> append(T value) {
     return this.append(new Node<T>(value));
   }
@@ -88,48 +84,6 @@ public class DoublyLinkedList<T> implements Iterable<T> {
     return this;
   }
 
-  public Node<T> replace(Node<T> node, int index) {
-    Node<T> replaced = this.get(index);
-    Node<T> prev = replaced.getPrevSibling();
-    Node<T> next = replaced.getNextSibling();
-
-    if (prev == null) {
-      this.head = node;
-    } else {
-      prev.addNextSibling(node);
-      node.addPrevSibling(prev);
-    }
-
-    if (next == null){
-      this.tail = node;
-    } else {
-      node.addNextSibling(next);
-      next.addPrevSibling(node);
-    }
-
-    return replaced;
-  }
-
-  public Node<T> delete(int index) {
-    Node<T> deleted = this.get(index);
-    Node<T> prev = deleted.getPrevSibling();
-    Node<T> next = deleted.getNextSibling();
-
-    if (prev == null) {
-      this.head = next;
-    } else {
-      prev.addNextSibling(next);
-    }
-
-    if (next == null){
-      this.tail = prev;
-    } else {
-      next.addPrevSibling(prev);
-    }
-
-    return deleted;
-  }
-
   public <U> U reduce(ReduceConsumer<T, U> action, U initialValue) {
     return this.reducer(action, initialValue, this.head, 0);
   }
@@ -154,6 +108,77 @@ public class DoublyLinkedList<T> implements Iterable<T> {
       (list, node, idx) ->
         list.append(action.accept(node, idx)),
       new DoublyLinkedList<U>());
+  }
+
+  public Node<T> get(int index)
+    throws
+      NoSuchElementException,
+      IndexOutOfBoundsException
+  {
+    if (index < 0) throw new IndexOutOfBoundsException();
+
+    Node<T> result = this.reduce((a, x, i) -> {
+      if (i == index) return x;
+      else return a;
+    }, null);
+
+    if (result == null) throw new NoSuchElementException();
+
+    return result;
+  }
+
+  public Node<T> delete(int index) {
+    return this.reduce((deleted, node, idx) -> {
+      // if the node is at the given index, then delete it
+      if (idx == index) {
+        Node<T> prev = node.getPrevSibling();
+        Node<T> next = node.getNextSibling();
+
+        if (prev != null) {
+          if (next != null) {
+            // the previous node's next should now be the next node
+            prev.addNextSibling(next);
+            // & vice-versa
+            next.addPrevSibling(prev);
+          } else {
+            // node was the tail
+            // so the previous node's next should now be null
+            prev.removeNextSibling();
+            // and the previous node should be the tail
+            this.tail = prev;
+          }
+        } else {
+          // node was the head, next should now be the head
+          this.head = next;
+        }
+
+        deleted = node;
+      }
+
+      return deleted;
+    }, null);
+  }
+
+  public Node<T> replace(Node<T> node, int index) {
+    Node<T> replaced = this.get(index);
+    Node<T> prev = replaced.getPrevSibling();
+    Node<T> next = replaced.getNextSibling();
+
+    if (prev == null) {
+      this.head = node;
+    } else {
+      prev.addNextSibling(node);
+      node.addPrevSibling(prev);
+    }
+
+    if (next == null){
+      this.tail = node;
+    } else {
+      node.addNextSibling(next);
+      next.addPrevSibling(node);
+    }
+
+    return replaced;
   }
 
   public void forEach(ForEachConsumer<T> action, boolean reverse) {
@@ -207,20 +232,24 @@ public class DoublyLinkedList<T> implements Iterable<T> {
 }
 
 class DLLIterator<T> implements Iterator<T> {
-  Node<T> currentNode;
+  Node<T> nextNode;
 
   DLLIterator(DoublyLinkedList<T> list) {
-    this.currentNode = list.getHead();
+    this.nextNode = list.getHead();
   }
 
   public T next() {
-    T result = currentNode.getValue();
-    this.currentNode = this.currentNode.getNextSibling();
+    if (this.hasNext()) {
+      Node<T> current = this.nextNode;
+      this.nextNode = current.getNextSibling();
 
-    return result;
+      return current.getValue();
+    } else {
+      throw new NoSuchElementException();
+    }
   }
 
   public boolean hasNext() {
-    return !(this.currentNode.getNextSibling() == null);
+    return !(this.nextNode == null);
   }
 }

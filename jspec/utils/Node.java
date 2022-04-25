@@ -30,6 +30,11 @@ public class Node<T> {
     return this.nextSibling;
   }
 
+  public void removeNextSibling() {
+    this.nextSibling.prevSibling = null;
+    this.nextSibling = null;
+  }
+
   public Node<T> addPrevSibling(Node<T> node) {
     this.prevSibling = node;
 
@@ -42,6 +47,11 @@ public class Node<T> {
 
   public Node<T> getPrevSibling() {
     return this.prevSibling;
+  }
+
+  public void removePrevSibling() {
+    this.prevSibling.nextSibling = null;
+    this.prevSibling = null;
   }
 
   public Node<T> addParent(Node<T> parent) {

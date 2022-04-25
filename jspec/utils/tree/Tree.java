@@ -64,7 +64,7 @@ public class Tree<T> implements Iterable<T> {
     return this.reducer(action, initialValue, 0);
   }
 
-  <U> U reducer(ReduceConsumer<T, U> action, U accumulator, int depth) {
+  private <U> U reducer(ReduceConsumer<T, U> action, U accumulator, int depth) {
     U updated = action.accept(accumulator, this.root, depth);
 
     return this.getChildren().reduce(

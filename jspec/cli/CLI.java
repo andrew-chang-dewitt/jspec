@@ -48,6 +48,16 @@ public class CLI implements Callable<Integer> {
   )
   String pattern;
 
+  public static void main(String[] args) {
+    int exitCode = new CommandLine(new CLI()).execute(args);
+    System.exit(exitCode);
+  }
+
+  CLI() {
+    this.runner = new Runner();
+    this.cwd = new File(System.getProperty("user.dir"));
+  }
+
   @Override
   public Integer call() {
     // start tracking time
@@ -80,17 +90,7 @@ public class CLI implements Callable<Integer> {
     return 0;
   }
 
-  public static void main(String[] args) {
-    int exitCode = new CommandLine(new CLI()).execute(args);
-    System.exit(exitCode);
-  }
-
-  CLI() {
-    this.runner = new Runner();
-    this.cwd = new File(System.getProperty("user.dir"));
-  }
-
-  void discover(File start, String pattern) {
+  private void discover(File start, String pattern) {
     try {
       // init empty list to hold list of found spec files
       ArrayList<Path> specFiles = new ArrayList<Path>();
@@ -121,7 +121,7 @@ public class CLI implements Callable<Integer> {
     }
   }
 
-  ArrayList<Group> compileAndInitFiles(ArrayList<Path> paths) throws DiscoveryError {
+  private ArrayList<Group> compileAndInitFiles(ArrayList<Path> paths) throws DiscoveryError {
     // set up compiler & java file manager
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager fileManager =
@@ -180,7 +180,7 @@ public class CLI implements Callable<Integer> {
     return specs;
   }
 
-  void run() {
+  private void run() {
     this.runner.run(false);
     this.runner.resultStrings(this.concise).forEach(
       (line, i) -> System.out.println(line.getValue()));

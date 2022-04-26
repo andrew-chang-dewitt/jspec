@@ -19,7 +19,8 @@ public class Crawler extends SimpleFileVisitor<Path> {
 
   public Crawler(File start, String pattern) {
     this.start = start;
-    this.pattern = FileSystems.getDefault().getPathMatcher("glob:" + pattern);
+    String glob = "glob:" + start.getAbsolutePath() + "/" + pattern;
+    this.pattern = FileSystems.getDefault().getPathMatcher(glob);
   }
 
   public Crawler crawl (

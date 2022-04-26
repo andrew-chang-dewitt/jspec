@@ -3,13 +3,11 @@ JSpec testing library
 
 A final project by Andrew Chang-DeWitt for CSCI 24000 at IUPUI, Spring 2022.
 
-_**Note**_: See a maintained version of this proposal document [on GitHub at andrew-chang-dewitt/jspec/blob/main/PROPOSAL.md](https://github.com/andrew-chang-dewitt/jspec/blob/main/PROPOSAL.md) for the most up to date version.
-
 A simple unit testing library for TDD & a cli for running tests.
 
 - **Intended User:** Java developers to write & evaluate unit tests.
 - **Problem solved:** Unit test writing & evaluation.
-- **Technologies needed:** CLI commands, file i/0, & output to stdout
+- **Technologies needed:** CLI commands, file i/0, programmatic/dynamic compilation, & output to stdout
 
 
 
@@ -31,36 +29,7 @@ Encompasses features that are used to write, group, set up, & tear down tests.
 - A User can define code that needs to be run once before executing a group of tests by defining a method called `before`.
 - A User can define code that needs to be run before each test in a group of tests by defining a method called `beforeEach`.
 - A User can define code that needs to be run once after executing a group of tests by defining a method called `after`.
-- A User can define code that needs to be run after each test in a group of tests by defining a method called `afterEach`.
-
-#### _**Stretch goal:**_ Improved assertions
-
-I'd like to have some features that are used to manage assertions.
-It'd be nice to keep them simple (using basic `assert` keyword & assoc. syntax), but grant some nice features around the error messaging on failure.
-Also would be nice to have some ability to have multiple assertions in one test and still check all when a preceding one fails.
-
-Any sort of chaining of assertions or execution of multiple assertions will require an assertions library or some sort of preprocessor macro, e.g.:
-
-
-```java
-// … using multiple assertions
-
-// plain assert statements with preprocessor
-assert true : “this will pass”;
-assert false : “this will fail”;
-assert true : “this will pass after the failure”;
-
-// or assertion library with methods
-// something like
-new Expect(1).to.eq(1);
-new Expect(2).to.eq(1);
-new Expect(1
-).to.eq(1);
-
-// either one should output should indicate the test failed, with a count of “sub-tests” or assertions indicating 2/3 passed
-```
-
-At the end of the day, either of those examples will require some sort of “sub test” feature. Implementing any sort of assertions library (the second example) will probably be a later, separate project.
+- A User can define code that needs to be run after each test in a group of tests by defining a method called `afterEach`
 
 ### Test running
 
@@ -69,8 +38,9 @@ Encompasses features for executing tests, evaluating for success or failure, & c
 - A User can run a test class (& any nested classes) manually by defining a main() method that creates an instance of itself & calls the instance's run() method.
 - A User receives a concise indicator of test result status after running a test class with a '.' to indicate a successful test & an 'F' to indicate a failure.
 - A User receives a count of successful tests out of total tests at the end of the report.
+- A User receives a detailed report consisting of the test class name, followed by a list of test method names & success or failure indicators, depending on the result.
 - A User receives details about any failed test, including the test class name, test method name, failure reason (exception name & message), & any stack trace.
-- A User can opt to receive a verbose output of test result status, consisting of the test class name, followed by a list of test method names & "Success" or "Failure", depending on the result.
+- A User can opt to receive a concise output of test result status, skipping the printing of each test group or test method's text and status
 
 ### Test discovery
 
@@ -183,7 +153,7 @@ Some failure(s):
 ```
 ================================================================================
 
-9/15 Passed
+9/15 (60%) Passed
 
 ```
 
@@ -192,7 +162,7 @@ No failures:
 ```
 ================================================================================
 
-15/15 Passed!
+15/15 (100%) Passed!
 
 ```
 
@@ -201,39 +171,24 @@ No failures:
 Algorithm
 ---
 
-The program is strictly Object-Oriented with all code organized by classes. 
+The program is strictly Object-Oriented with all code organized by classes.
 A UML diagram is provided here, with more details about each class below it.
 
 ![UML diagram](./uml.svg)
 
 **OOP Relationships:**
 
-- A User's test definition class inherits from Group
-- A User's test runner class inherits from Runner
+- A User's test definition class extends Group
+- A User's test runner class extends Runner
 - One Group aggregates zero to many Group
 - One Runner aggregates one to many Group
-- One TestResult inherits from ResultABC
-- One GroupResult inherits from ResultABC
-- One Node<? extends ResultABC> composes one child of ResultAbC
-- One Node\<T\> composes zero to many Node\<T\>
-- One Tree\<T\> composes zero to many Node\<T\>
-- One Runner aggregates one Tree\<ResultAbC\>
+- One Node<Result> aggregates one Result
+- One Node\<T\> aggregates zero to many Node\<T\>
+- One Tree\<T\> aggregates one Node\<T\>
+- ResultsTree extends Tree\<Result\>
+- One Runner aggregates one ResultsTree
 - One CLI aggregates one Runner
-- One Crawler aggregates one to many Group
 - One CLI composes one Crawler
-- One CLI composes one ArgParser
-
-_**Stretch Goal:**_
-
-There might be room to abstract the tree behavior of Runner/Group & Tree/Node into an interface that each pairing implements.
-Both will structure their Nodes slightly differently though:
-
-1. Group discovers child node Groups by calling Class.getDeclaredClasses(), which returns an array of more Group classes.
-  Each sibling Group doesn't have a reference to its other siblings.
-2. Node discovers child node Nodes by accessing the head or tail Child reference, then iterating using the next or previous Sibling references.
-
-This difference leads to any "abstraction" of the tree behavior being mostly limited to a traversal method, but it will have to be at least partially virtual, as both have some differences in their traversal methods.
-
 
 ### Group
 
@@ -241,68 +196,75 @@ A User creates a `Group` of tests by defining a new class that inherits from thi
 Nested groups are created by defining inner classes (that inherit from `Group`) inside a child of `Group`.
 Most User stories belonging to the _**Test Definition**_ group above will be built as features on `Group`.
 
-_**Stretch goal:**_
-
-There might be subclasses of `Group` that add some sort of functionality that changes a typical `Group`'s behavior, i.e. asynchronous test execution.
-
 #### Properties
 
-- _protected static String **description**_: a property used to give a better description to a test group, defaults to null if not implemented in a child class 
+- _protected static String **desc**_: a property used to give a better description to a test group, defaults to null if not implemented in a child class
 
 #### Methods
 
-- _**public static main(String[] args) -> void**_
+- _public **visit**() -> VisitResults_
 
-  Implemented to allow for a very simple use case where a User only writes a test group as a child of Group, then compiles & runs it without having to set up a Runner or use a CLI.
+  1. Get the `Class` object for this `Group` instance
+  2. Get a list of methods for the instance
+  3. Get a list of inner classes for the instance
+  4. Return a new instance of VisitResults containing:
+      1. A list of test results created using `Group.evaluate()`
+      2. A list of inner Groups found using `Group.findChildren()`
 
-  1. Creates a Runner instance with an instance of this group passed to it.
-  2. Calls the runner's `run()` method to execute the tests.
+- _private **evaluate**(
+  Methods[] tests,
+  Class<? extends Group> instanceClass,
+  boolean silent) -> DoublyLinkedList<Result>_
 
-- _**public visit() -> IGroupVisitResult**_
+  1. Create an empty list to store results
+  2. Perform setup tasks using `this.before()`
+  3. Loop over the given list of method:
+      1. Create new `Result`
+      2. If this `Group` has a non-null `desc` attribute, add it to the result
+      3. Try the following:
+          1. Perform per-test setup using `this.beforeEach()`
+          2. Invoke the test method
+          3. Perform per-test teardown using `this.afterEach()`
+          4. Mark the result as a passed test
+      4. Catch InvocationTargetException
+          1. Mark result as a failed test with caught target exception
+          2. If not silent:
+              1. If caught exception was caused by an AssertionError, print an "F"
+              2. Else print an "E"
+      5. Cath IllegalAccessException
+          1. Mark result as a failed test with caught exception
+          2. If not silent print an "E"
+  4. Perform teardown using `this.after()`
+  5. Return the list of results
 
-  1. Initialize empty ArrayList\<TestResult\>
-  2. Get all methods on this instance of Group using `this.getClass().getDeclaredMethods()`
-  3. Call `this.before()`
-  4. Iterate over methods:
-    1. If method begins with "test"
-      1. Call `this.beforeEach()`
-      2. pass to `this.evaluateTest()` & add returned Result to ArrayList
-      3. Call `this.afterEach()`
-    2. Else do nothing with it
-  5. Call `this.after()`
-  6. Get all inner classes on this instance of Group using `this.getClass().getDeclaredClasses()` & filter by those that are an instance of `Group`
-  7. Return new `IGroupVisitResult` containing the lsit of test results & the list of child `Group`s
+- _private **findChildren**(
+  Class<?>[] nested,
+  Group parent) -> DoublyLinkedList<Group>_
 
-- _**private evaluateTest(Method test) -> TestResult**_
-
-  1. Get test method's declared name using `test.getName()`
-  2. Create new `Result` with test method's declared name
-  3. Get descriptive name using `this.getDescName()` with the declared name
-  4. If descriptive name is not null, add to `Result` with method `describe()`
-  5. Try to invoke the test method, then mark `Result` as passed with method `pass()` & return the passed `Result`
-    1. Catch any InvocationTargetException or IllegalAccessException & add to `Result` by passing the exception to it's `fail()` method
-    2. Return the failed result
+  1. Create an empty list to store children
+  2. For each given nested class:
+      1. If the nested class is a descendent of Group, try the following:
+          1. Get the class's constructor & initialize an instance of it
+          2. Append the instance to the list of children
+      2. Catch IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException exceptions:
+          1. Print a helpful error message
+          2. Print the exception
 
 - Virtual functions:
 
-  The following methods are defined as virtual functions that are all a no-op if not defined in a child class.
+  The following methods are defined as "virtual" functions that are all a no-op if not defined in a child class.
   Each is a method that will be called a different stage of test execution: once before _any_ tests are called, once before _each_ test method is called, once after _each_ test is called, & finally once after _all_ the tests are called.
   A child class can implement any or all of these to customize some behavior needed for all tests or perform some set-up or tear-down actions.
 
-  - _**public before() -> void**_
-  - _**public beforeEach() -> void**_
-  - _**public afterEach() -> void**_
-  - _**public after() -> void**_
+  - _public **before**() -> void_
+  - _public **beforeEach**() -> void_
+  - _public **afterEach**() -> void_
+  - _public **after**() -> void_
 
 
-### IGroupVisitResult
+### VisitResults
 
-A simple interface to structure the return type of `Group.visit()`
-
-#### Properties
-
-- _ArrayList\<TestResult\> **testResults**_: the results of tests belonging to the Group that was visited
-- _Group[] **children**_: An array of child Groups that have yet to be processed
+A simple data class that stores a list of `Group`s and a list of `Result`s.
 
 
 ### Runner
@@ -331,63 +293,36 @@ Most likely, the User will never need to implement this class, but it's exposed 
 
 #### Properties
 
-- _private ArrayList\<Group\> **groups**_: stores the groups to be evaluated by this `Runner`
-- _private Tree\<ResultABC\> **results**_: stores the results after the groups are evaluated
+- _private DoublyLinkedList\<Group\> **groups**_: stores the groups to be evaluated by this `Runner`
+- _private ResultsTree **results**_: stores the results after the groups are evaluated
+- _int **totalTests**_: for counting the number of tests executed when running all the Groups' tests
+- _int **failedTests**_: for counting the number of failed tests
 
 #### Methods
 
-- _**public Runner(Group ... groups)**_
+- _public Constructor **Runner**(Group ... groups)_
+- _public Constructor **addGroup**(Group group)_
 
-  1. Iterate over arg, passing each one to `this.groups.add()`
+  1. Build Runner containing the given `Group`(s)
 
-- _**public addGroup(Group group) -> Runner**_
+- _public **run**() -> Runner_
 
-  1. Add to `this.groups` using `ArrayList::add()`.
+  1. Create a `ResultsTree` on `this.results` with an empty root
+  2. If not silent, print an empty line to pad output
+  3. Loop over `this.groups` passing each group to `this.buildResults`
 
-- _**public run() -> Tree\<ResultABC\>**_
+- _private **buildResults**(ResultsTree tree, Group group, boolean silent) -> void_
 
-  1. Create an empty `Tree` of `GroupResult`s
-  2. Iterate over `this.groups`, calling `this.processGroup` for each one & adding the resulting `Node<GroupResult>` to the `Tree` as a root using `Tree::addRoot`
-  3. Return the `Tree`
-
-- _**private processGroup(Group group) -> Node\<GroupResult\>**_
-    1. Create a new `Node<GroupResult>` called `newNode` with the `group`'s declared name
-    2. Add the `Group`'s descriptive name by getting `Group.description` & passing it to `GroupResult.describe()`
-    3. Call the `visit()` method on the group
-    4. Iterate over the `testResults` property of the returned object, doing the following for each one:
-      1. Call `this.buildTestResultNode()`
-      2. Pass the `Node<GroupResult>` as the parent node & the previous test result as the previous sibling node (if it exists) & if the current result is the last one of the list as `isLastChild`
-    5. If returned object's `children` property is not null, iterate over it, calling `this.processGroup` on each one, adding the returned node as a child to `newNode` using `Node::addTailChild`
-    6. Else, return the `newNode`
-
-- _**private buildTestResultNode(
-\    TestResult result,
-\    Node\<GroupResult\> parent, 
-\    Node\<TestResult\> prevSibling,
-\    bool isLastChild,
-  ) -> Node\<TestResult\>**_
-
-  1. Create a new `Node<TestResult>` giving `result` as the value
-  2. Add `parent` using `Node::addParent()`
-  3. If `prevSibling` is not null
-    1. Add `prevSibling` using `Node::addPrevSibling`
-    2. Add new node as the next Sibling for the previous node using `Node::nextSibling`
-  4. Else add new node as `headChild` to parent node using `Node::addHeadChild()`
-  5. If `isLastChild` is true, add new node as `tailChild` to parent node using `Node::addTailChild()`
-  6. Return new node
-
-- _**public renderResults(OutputStream outStream) -> void**_
-
-  1. Create an empty ArrayList\<String\>
-  2. Call the `preorder()` method on `this.results`, giving it a lambda callback that: 
-    1. Call the `toString()` method of each node
-    2. Prefix it with a string spaces with a length equal to 2 multiplied by the depth of the node
-    3. Add the prefixed string to the ArrayList created at the beginning
-  3. Iterate over the ArrayList, passing each String to `System.out.println()`
+  1. Create a `Node` containing a `Result` made from this `Group`
+  2. Add newly created `Node` to the given `ResultsTree`
+  3. Call the `Group`'s visit method, storing the results
+  4. Make a new `ResultsTree` pointing to the new `Node` created above as its root
+  5. Loop over the test results from calling `visit()` above, adding each result as a child node to the newly created tree
+  6. Loop over the children gotten from calling `visit()` above, calling `this.buildResults()` on each of them to continue building tree recursively
+  7. Return the given tree
 
 
-
-### ResultABC
+### Result
 
 An abstract base class for defining a result value to store in a tree.
 Defining shared properties & one shared method, all used to render the tree of values.
@@ -396,73 +331,67 @@ Defining shared properties & one shared method, all used to render the tree of v
 
 - _private String **codeName**_: the name of the method or class in the test code that this result is from
 - _private String **descName**_: a more descriptive name given to this class or test method, may be null
+- _private boolean **testResult**_: indicates if `Result` is for a `Group` or a test method
+- _private boolean **pass**_: indicates if the test passed or not
+- _private Throwable **exc**_: stores the exception thrown when a test failed
 
 #### Methods
 
-- _**public toString() -> String[]**_
+- _Constructor public **Result**(String codeName)_
 
-  Virtual method in ABC.
-  Defined on ABC to guarantee existence, but doesn't implement it.
-  
-  1. Raise `NotImplementedError` if this version is called.
+  1. Set `this.codeName` to given string
+  2. Set as not a test result
 
-- _**protected getText() -> String[]**_
+- _public **describe**(String description) -> Result_
 
-  1. If `this.descName` is not null, return it
-  2. Else return `this.codeName`
+  1. Set `this.descName` to given string
+  2. Return this
 
+- _public **pass**() -> Result_
 
-### TestResult extends ResultABC
+  1. Mark result as passed
+  2. Mark result as being for a test
+  3. Return this
 
-A concrete child of ResultABC.
-Uses Builder Pattern for constructing an instance.
+- _public **fail**(Throwable exc) -> Result_
 
-#### Properties
+  1. Mark result as failed
+  2. Mark result as being for a test
+  3. Set `this.exc` to given exception
+  4. Return this
 
-- _bool **pass**_:
-- _Exception **exc**_:
+- _public **statusString**(String prefix) -> String_
 
-#### Methods
+  1. Create a result string, starting with the name from `this.getName()`
+  2. If `Result` is for a test, append with a ✅ or ❌ indicating it passed or failed
+  3. Prepend with given prefix & return
 
-- _**public TestResult(String codeName)**_
+- _public **failureStrings**(String prefix) -> DoublyLinkedList\<String\>_
 
-  1. Give arg to `this.codeName`
+  1. If `Result` is a test, create a new `DoublyLinkedList` of Strings
+      1. Then append it with two empty lines
+      2. Then a line of "="
+      3. Then "❌ FAILURE:" followed by the `Result`s name
+      4. Then a line of "-"
+      5. Then the `this.exc`'s String representation
+      6. Then `this.exc`'s stack trace lines
+      7. And finally an empty line
+  2. Else, throw an error
 
-- _**public describe(String description) -> TestResult**_
-  
-  1. Give arg to `this.descName`
-  2. Return `this`
+Getters:
 
-- _**public pass() -> TestResult**_
+- _public **getName**() -> String_
+- _public **getCodeName**() -> String_
+- _public **getDescription**() -> String_
+- _public **getFailureExc**() -> Throwable_
+- _public **didPass**() -> boolean_
+- _public **isTest**() -> boolean_
 
-  1. Set `this.pass` to `true`
-  2. Return `this`
-
-- _**public fail(Exception exc) -> TestResult**_
-
-  1. Set `this.pass` to `false`
-  2. Give arg to `this.exc`
-  3. Return `this`
-
-- _**public toString() -> String[]**_
-
-  1. Get line text using `this.getText`, then append with check or x if passed or failed
-
-
-### GroupResult extends ResultABC
-
-A concrete child of ResultABC.
-
-#### Methods
-
-- _**public toString() -> String[]**_
-
-  1. Get line text using `this.getText`
 
 
 ### Node\<T\>
 
-Encapsulates logic for building a tree of nodes.
+Encapsulates logic for building a collection of nodes.
 
 #### Properties
 
@@ -475,10 +404,9 @@ Encapsulates logic for building a tree of nodes.
 
 #### Methods
 
-- _**public Node\<T\>(T value)**_
+- _Constructor public **Node**(T value)_
 
   1. Assign `value` to `this.value`
-
 
 - Builder pattern:
 
@@ -486,148 +414,218 @@ Encapsulates logic for building a tree of nodes.
   First the creator calls the constructor with the desired value, then sets any parent, child, or sibling nodes using the appropriate method below.
   These method calls can be chained, as they all return the instance of `Node<T>` after adding the given parent/child/sibling node.
 
-  - _**public addParent(Node\<T\> node) -> Node\<T\>**_
-  - _**public addHeadChild(Node\<T\> node) -> Node\<T\>**_
-  - _**public addTailChild(Node\<T\> node) -> Node\<T\>**_
-  - _**public addNextSibling(Node\<T\> node) -> Node\<T\>**_
-  - _**public addPrevSibling(Node\<T\> node) -> Node\<T\>**_
+  - _public **addParent**(Node\<T\> node) -> Node\<T\>_
+  - _public **addHeadChild**(Node\<T\> node) -> Node\<T\>_
+  - _public **addTailChild**(Node\<T\> node) -> Node\<T\>_
+  - _public **addNextSibling**(Node\<T\> node) -> Node\<T\>_
+  - _public **addPrevSibling**(Node\<T\> node) -> Node\<T\>_
 
 - Getters:
 
   These methods are all simple getters for the associated private property.
 
-  - _**public getParent() -> Node\<T\>**_
-  - _**public getHeadChild() -> Node\<T\>**_
-  - _**public getTailChild() -> Node\<T\>**_
-  - _**public getNextSibling() -> Node\<T\>**_
-  - _**public getPrevSibling() -> Node\<T\>**_
+  - _public **getParent**() -> Node\<T\>_
+  - _public **getHeadChild**() -> Node\<T\>_
+  - _public **getTailChild**() -> Node\<T\>_
+  - _public **getNextSibling**() -> Node\<T\>_
+  - _public **getPrevSibling**() -> Node\<T\>_
 
-- Setters: There is currently no use case where setters will be needed as the Results Tree is build & never modified. 
+- Deleters:
+
+  These methods set the `Node`'s referenced sibling to `null`.
+  Additionally, they edit the previously referenced sibling to remove its reference to this `Node`—e.g. if `A` has `B` as a next sibling, then calling `A.removeNextSibling()` will set `A`'s next sibling to `null` & `B`'s previous sibling to `null` as well.
+
+  - _public **removeNextSibling**() -> void_
+  - _public **removePrevSibling**() -> void_
+
+- Setters: There is currently no use case where setters will be needed as the Results Tree is build & never modified.
 
 
 ### Tree\<T\>
 
-Encapsulates logic for traversing a tree & a reference to the root node.
-In this use case, there's a likely possibility that there's multiple trees, but its simpler to store them as though they are one tree with multiple root nodes.
-This implementation stores the multiple root nodes as a linked list with references to the head root & tail root.
+Encapsulates logic for traversing & manipulating a tree via a reference to the root node.
 
 #### Properties
 
-- _private Node\<T\> **headRoot**_
-- _private Node\<T\> **tailRoot**_
+- _private Node\<T\> **root**_
 
 #### Methods
 
-- _**public Tree\<T\>() -> Tree\<T\>**_
+- _public **Tree**(Node\<T\> node) -> Tree\<T\>_
 
-- _**public preorder(FnICallback cb) -> void**_
+  Create a tree with the given root node.
 
-- _**public addNode(
-\    Node\<T\> node,
-\    Node\<T\> parent,
-\    Node\<T\> headChild,
-\    Node\<T\> tailChild,
-\    Node\<T\> nextSibling,
-\    Node\<T\> prevSibling
-\  ) -> Tree\<T\>**_
+- _public **appendChild**(Node\<T\> node) -> Tree\<T\>_
+- _public **prependChild**(Node\<T\> node) -> Tree\<T\>_
 
-_**Note:**_ While there could be methods implemented for inserting nodes in existing tree structures ()or removing nodes), there's no use case yet for this functionality so it'd be a waste of time to build them at this time.
+  Append/Prepend given `Node` to the root's list of children.
+
+- _public **getChildren**(Node\<T\> node) -> DoublyLinkedList\<T\>_
+
+  Return a list of the root node's children.
+
+- _public <U> **reduce**(
+  ReduceConsumer<T,U> action,
+  U initialValue) -> U_
+
+  Traverses the tree with a pre-order algorithm, executing the given `ReduceConsumer` for each node & returning the new data structure.
+
+  1. Call `this.reducer()` with given `ReduceConsumer`, initial value, & a starting depth of 0.
+
+- _public <U> **reducer**(
+  ReduceConsumer<T,U> action,
+  U accumulator,
+  int depth) -> U_
+
+  1. Call given `ReduceConsumer.accept()` on `this.root` with the given accumulator & depth, saving the result as an updated accumulator
+  2. Reduce the list from calling `this.getChildren()`, doing the following for each `Node`:
+      1. Create a new `Tree` with the node as it's root
+      2. Call the new tree's `reducer` method with the given action, the updatedaccumulator, & the current depth + 1
+
+- _public **forEach**(ForEachConsumer<T> action) -> void_
+
+  Loops over the tree in a pre-order traversal, executing the given `ForEachConsumer` for each node. Uses `this.reduce()` to reuse the pre-order logic.
+
+- _public <U> **map**(MapConsumer<T,U> action) -> Tree\<U\>_
+
+  Loops over the tree in a pre-order traversal, executing the given `MapConsumer` for each node to build a new `Tree` with the result of each call.
+
+  1. Create an object to track the relationships of previously traversed nodes relative to the current node
+  2. Call `this.reduce`, doing the following for each node:
+      1. Call the given consumer on the current node's value, creating a new node from the result
+      2. If there was no previous node:
+          1. Push the current node to the stack of parent nodes
+          2. Save this node as the new previous node
+          3. And make a new Tree with this node as the root
+      3. Else if the current node's depth is greater than the previous node's depth:
+          1. Set previous node depth to the current node depth
+          2. Push the previous node to the stack of parent nodes
+          3. Create a new tree from the previous node & append the current node as a child
+      4. Else if the current node's depth is equal to the previous node's:
+          1. Get the tree with the parent node at the top of the stack as it's root, then append the current node as a child node
+      5. Else if the current node's depth is less than the previous node's depth:
+          1. Then pop nodes off the stack of parent nodes until we've returned to the current depth
+          2. Get the tree with the new parent node at the top of the stack as it's root, then append the current node as a child node
+      6. Return the tracker object to be used when processing the next node
+  3. Return the tree stored in the tracker object
+
+- _public **find**(FindPredicate<T> predicate) -> Node\<T\>_
+
+  Returns the first node (using a pre-order traversal) that satisfies the given predicate.
+  Uses `this.reduce` to reuse the traversal logic.
+
+- _public **find**(T value) -> Node\<T\>_
+
+  Returns the first node (using a pre-order traversal) that matches the given value.
+
+- _public **contains**(T value) -> boolean_
+
+  Returns true if the Tree contains a node with the given value.
+
+- _public **iterator**() -> Iterator\<T\>_
+
+  Returns an `Iterable\<T\>` from the given tree that follows a pre-order traversal.
+
 
 
 ### Crawler
 
 Encapsulates logic for crawling the project file tree for test definition files & getting the defined `Group` descendants from them.
-
-
-### ArgParser
-
-Encapsulates logic for parsing Strings as arguments.
+Extends `java.nio.file.SimpleFileVisitor`.
 
 #### Properties
 
-- _private java.io.File? **outfile**_: a file to output results to, if given
-- _private java.nio.file.PathMatcher **pattern**_: a search pattern to use when looking for test definition files, defaults to "./\*\*/\*Spec.java"
-- _private bool **verbose**_: will render verbose output, if true; defaults to false
+- _private File **start**_: the file to start crawling the file tree at
+- _private PathMatcher **pattern**_: the pattern to match files to
+- _private CrawlHandler **handler**_: a function to execute if a file matches the pattern
+- _private CrawlExcHandler **excHandler**_: a function to execute if there's an error processing a file
 
 #### Methods
 
-- _**public ArgParser()**_
-  
-  No-argument constructor—inherited from Object.
-  Instances are to be build using Builder Pattern (e.g. `CLI cli = CLI().some_method().maybe_another_method()`).
+- _Constructor public **Crawler**(File start, String pattern)_
 
-- _**public arg(String argument) -> ArgParser**_
+  1. Save start file
+  2. Get `PathMatcher` from given pattern string
 
-  Add an argument to the parser.
-  
-  1. Check if argument starts with one dash or two.
-    - if one, dispatch to `this.shortFlag()`
-    - else if two, dispatch to `this.longFlag()`
-    - else dispatch to `this.addPattern()`
+- _public **crawl**(
+  CrawlHandler handler,
+  CrawlExcHandler excHandler) -> Crawler_
 
-- _**private shortFlag(String arg) -> CLI**_
+  1. Set properties to given handlers
+  2. Use `java.nio.file.Files.walkFileTree` to walk file tree starting at `this.start` & using this `Crawler` object as the `FileVisitor`
 
-  Handle parsing & adding short flags.
+- _\<\<override\>\> public **visitFile**(
+  Path file,
+  BasicFileAttributes attrs) -> FileVisitResult_
 
-  1. Remove single dash from front of string (i.e. "-text" becomes "text").
-  2. Split string on "=" character; assign first part to `flag` & second to `value`.
-  3. Switch on `flag` with `EShortFlag` enum
-    - case "o": dispatch `value` to `this.addOutFile()` 
-    - case "p": dispatch `value` to `this.addPattern()` 
-    - case "v": dispatch `true` to `this.addVerbose()` 
+  If file path matches `this.pattern`, call `this.handler` on given file.
 
-- _**private longFlag(String arg) -> CLI**_
+- _\<\<override\>\> public **visitFileFailed**(
+  Path file,
+  IOException exc) -> FileVisitResult_
 
-  Handle parsing & adding long flags.
+  Call `this.excHandler` w/ given path & exception.
 
-  1. Remove double dash from front of string (i.e. "--text" becomes "text").
-  2. Split string on "=" character; assign first part to `flag` & second to `value`.
-  3. Switch on `flag` with `EShortFlag` enum
-    - case "outFile": dispatch `value` to `this.addOutFile()` 
-    - case "pattern": dispatch `value` to `this.addPattern()` 
-    - case "verbose": dispatch `true` to `this.addVerbose()` 
-
-- _**private addOutFile(String pathname) -> CLI**_
-
-  1. Create new `File` from given `pathname` & give to `this.outFile`
-
-- _**private addPattern(String glob) -> CLI**_
-
-  1. Prepend given glob with syntax identifier, "glob:" & give to `prepended`
-  2. Try to create a new PathMatcher object using prepended glob `FileSystems.getDefault().getPathMatcher(prepended)` and give to `this.pattern`
-    - catch `java.util.regex.PatternSyntaxException`: throw `BadPattern`
-
-- _**private addVerbose(bool arg) -> CLI**_
-
-  1. Set `this.verbose` equal to given value
 
 
 ### CLI
 
 Main entry point for the command line interface program.
 Encapsulates logic to receive commands & arguments, then dispatches commands & composes results accordingly.
+Implements the `Callable` interface & uses [remkop/picocli](https://github.com/remkop/picocli) to build CLI features.
 
 #### Properties
 
-- _ArgParser **args**_
-- _Crawler **crawler**_
-- _Runner **runner**_
+- _File **cwd**_: the current working directory
+- _Runner **runner**_: an instance of `Runner`
+- _boolean **concise**_: a flag for concise vs verbose output
+- _String **pattern**_: the search pattern for finding test files, defaults to "\*\*/\*Spec.java"
 
 #### Methods
 
-_**public static main(String[] args) -> void**_
+- _public static **main**(String[] args) -> void_
 
-  1. Initialize an instance of `ArgParser` & give it to `this.args`
-  2. Iterate over `args` array, giving each one to `this.args` to be processed using `ArgParser.arg()`
-    - if `UnknownArg` or `BadPattern` is thrown, exit program & display error to user
-  3. Get the PWD from `System.getProperty("user.dir")`
-  4. Initialize an instance of `Crawler` with the PWD & the pattern from `this.args.getPattern()` & give the new instance to `this.crawler`
-  5. Discover test groups using `this.crawler`'s method `Crawler.crawl()`
-    - if `NoTestsFound` is thrown, exit program & display error to user
-  6. Initialize an instance of `Runner` & give it to `this.runner`
-  7. Give each `Group` found by `this.crawler` to `this.runner` using `Crawler.getGroups()` & iterating over the result, calling `Runner.addGroup()` on each `Group`
-  8. Run the tests using `Runner.run()`
-  9. Render the results to the user
+  1. Run the CLI with given args using `picocli.CommandLine.execute(args)`
+  2. System exit code to resulting int
+
+- _Constructor public **CLI()**_
+
+  1. Init an empty Runner()
+  2. Get current working directory from `System`
+
+- _public **call**(String[] args) -> int_
+
+  1. Start tracking time
+  2. Discover & compile test classes w/ `this.discover`
+  3. Mark compile time duration
+  4. Run tests
+  5. Mark run time duration & total time duration
+  6. Report times to user
+  7. Return 0 to indicate success
+
+- _private **discover**(File start, String pattern) -> void_
+
+  1. Create an empty list to store paths to test files
+  2. Init a `Crawler` with cwd & given pattern
+  3. Then initiate crawl with success handler that adds a matching file to the list & an error handler that indicates there was an error processing a given file
+  4. Compile and initialize test `Group`s using `this.compileAndInitFiles`, then add each initialized `Group` to `this.runner`
+  5. Catch and report errors thrown while crawling file tree
+
+- _private **compileAndInitFiles**(ArrayList<Path> paths) -> ArrayList\<Group\>_
+
+  1. Set up compiler & java file manager
+  2. Get list of source File objects from given paths
+  3. Compile files
+  4. Loop over given list of paths:
+    1. Get the fully qualified name for each path's class
+    2. Initialize the class from the fqn
+    3. Add the initialized `Group` to the list of Groups to return
+
+- _private **run**() -> void_
+
+  1. Run all `Group`s in `this.runner`
+  2. Loop over `this.runner.resultStrings()` to print each line
+
 
 
 
@@ -636,7 +634,7 @@ _**public static main(String[] args) -> void**_
 
 **OOP:**
 
-- Inheritence
+- Inheritence - `ResultsTree` -|> `Tree\<Tree\>`
 - Encapsulation
 - Polymorphism
 - Abstraction
@@ -644,12 +642,15 @@ _**public static main(String[] args) -> void**_
 **Data structures:**
 
 - ArrayList
-- Doubly Linked Lists
-- n-ary Trees
+- Doubly Linked List
+- Stack
+- n-ary Tree
 
 **Algorithms:**
 
-- preorder tree traversal
+- pre-order tree traversal
+- functional collection transformation (i.e. map, reduce, forEach)
+- file-tree traversal
 
 
 

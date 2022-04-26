@@ -125,29 +125,20 @@ public class Tree<T> implements Iterable<T> {
     return reduced.tree;
   }
 
-  public Node<T> find(T value) throws ValueNotFound {
-     Node<T> result = this.reduce(
-      (found, current, d) -> {
-        if (found != null) return found;
-        T currentValue = current.getValue();
+  public Node<T> find(FindPredicate<T> predicate) throws ValueNotFound {
+    Node<T> result = this.reduce(
+     (found, current, d) -> {
+       if (found != null) return found;
 
-        return currentValue == value ? current : found;
-      }, null);
+       return predicate.check(current) ? current : found;
+     }, null);
 
-     if (result == null) throw new ValueNotFound(value, this);
-     return result;
+    if (result == null) throw new ValueNotFound(predicate, this);
+    return result;
   }
 
-  public Node<T> find(FindPredicate<T> predicate) throws ValueNotFound {
-     Node<T> result = this.reduce(
-      (found, current, d) -> {
-        if (found != null) return found;
-
-        return predicate.check(current) ? current : found;
-      }, null);
-
-     if (result == null) throw new ValueNotFound(predicate, this);
-     return result;
+  public Node<T> find(T value) throws ValueNotFound {
+    return this.find(current -> current.getValue() == value);
   }
 
   public boolean contains(T value) {

@@ -6,7 +6,7 @@ DBG= $(CC) $(DBG_FLAGS)
 TST= java -ea jspec.cli.CLI
 
 clean:
-	find . -name \*.class -type f -delete
+	find ./jspec -name \*.class -type f -delete
 
 build: jspec/cli/CLI.java
 	$(CC) jspec/cli/CLI.java

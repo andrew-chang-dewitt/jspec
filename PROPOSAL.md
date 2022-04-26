@@ -171,7 +171,7 @@ No failures:
 Algorithm
 ---
 
-The program is strictly Object-Oriented with all code organized by classes. 
+The program is strictly Object-Oriented with all code organized by classes.
 A UML diagram is provided here, with more details about each class below it.
 
 ![UML diagram](./uml.svg)
@@ -198,7 +198,7 @@ Most User stories belonging to the _**Test Definition**_ group above will be bui
 
 #### Properties
 
-- _protected static String **desc**_: a property used to give a better description to a test group, defaults to null if not implemented in a child class 
+- _protected static String **desc**_: a property used to give a better description to a test group, defaults to null if not implemented in a child class
 
 #### Methods
 
@@ -208,12 +208,12 @@ Most User stories belonging to the _**Test Definition**_ group above will be bui
   2. Get a list of methods for the instance
   3. Get a list of inner classes for the instance
   4. Return a new instance of VisitResults containing:
-      1. A list of test results created using `Group.evaluate()` 
-      2. A list of inner Groups found using `Group.findChildren()` 
+      1. A list of test results created using `Group.evaluate()`
+      2. A list of inner Groups found using `Group.findChildren()`
 
 - _private **evaluate**(
   Methods[] tests,
-  Class<? extends Group> instanceClass, 
+  Class<? extends Group> instanceClass,
   boolean silent) -> DoublyLinkedList<Result>_
 
   1. Create an empty list to store results
@@ -228,7 +228,7 @@ Most User stories belonging to the _**Test Definition**_ group above will be bui
           4. Mark the result as a passed test
       4. Catch InvocationTargetException
           1. Mark result as a failed test with caught target exception
-          2. If not silent: 
+          2. If not silent:
               1. If caught exception was caused by an AssertionError, print an "F"
               2. Else print an "E"
       5. Cath IllegalAccessException
@@ -238,7 +238,7 @@ Most User stories belonging to the _**Test Definition**_ group above will be bui
   5. Return the list of results
 
 - _private **findChildren**(
-  Class<?>[] nested, 
+  Class<?>[] nested,
   Group parent) -> DoublyLinkedList<Group>_
 
   1. Create an empty list to store children
@@ -438,7 +438,7 @@ Encapsulates logic for building a collection of nodes.
   - _public **removeNextSibling**() -> void_
   - _public **removePrevSibling**() -> void_
 
-- Setters: There is currently no use case where setters will be needed as the Results Tree is build & never modified. 
+- Setters: There is currently no use case where setters will be needed as the Results Tree is build & never modified.
 
 
 ### Tree\<T\>
@@ -511,12 +511,12 @@ Encapsulates logic for traversing & manipulating a tree via a reference to the r
 
 - _public **find**(FindPredicate<T> predicate) -> Node\<T\>_
 
-  Returns the first node (using a pre-order traversal) that satisfies the given predicate. 
+  Returns the first node (using a pre-order traversal) that satisfies the given predicate.
   Uses `this.reduce` to reuse the traversal logic.
 
 - _public **find**(T value) -> Node\<T\>_
 
-  Returns the first node (using a pre-order traversal) that matches the given value. 
+  Returns the first node (using a pre-order traversal) that matches the given value.
 
 - _public **contains**(T value) -> boolean_
 
@@ -531,6 +531,40 @@ Encapsulates logic for traversing & manipulating a tree via a reference to the r
 ### Crawler
 
 Encapsulates logic for crawling the project file tree for test definition files & getting the defined `Group` descendants from them.
+Extends `java.nio.file.SimpleFileVisitor`.
+
+#### Properties
+
+- _private File **start**_: the file to start crawling the file tree at
+- _private PathMatcher **pattern**_: the pattern to match files to
+- _private CrawlHandler **handler**_: a function to execute if a file matches the pattern
+- _private CrawlExcHandler **excHandler**_: a function to execute if there's an error processing a file
+
+#### Methods
+
+- _Constructor public **Crawler**(File start, String pattern)_
+
+  1. Save start file
+  2. Get `PathMatcher` from given pattern string
+
+- _public **crawl**(
+  CrawlHandler handler,
+  CrawlExcHandler excHandler) -> Crawler_
+
+  1. Set properties to given handlers
+  2. Use `java.nio.file.Files.walkFileTree` to walk file tree starting at `this.start` & using this `Crawler` object as the `FileVisitor`
+
+- _\<\<override\>\> public **visitFile**(
+  Path file,
+  BasicFileAttributes attrs) -> FileVisitResult_
+
+  If file path matches `this.pattern`, call `this.handler` on given file.
+
+- _\<\<override\>\> public **visitFileFailed**(
+  Path file,
+  IOException exc) -> FileVisitResult_
+
+  Call `this.excHandler` w/ given path & exception.
 
 
 
@@ -538,28 +572,60 @@ Encapsulates logic for crawling the project file tree for test definition files 
 
 Main entry point for the command line interface program.
 Encapsulates logic to receive commands & arguments, then dispatches commands & composes results accordingly.
+Implements the `Callable` interface & uses [remkop/picocli](https://github.com/remkop/picocli) to build CLI features.
 
 #### Properties
 
-- _ArgParser **args**_
-- _Crawler **crawler**_
-- _Runner **runner**_
+- _File **cwd**_: the current working directory
+- _Runner **runner**_: an instance of `Runner`
+- _boolean **concise**_: a flag for concise vs verbose output
+- _String **pattern**_: the search pattern for finding test files, defaults to "\*\*/\*Spec.java"
 
 #### Methods
 
-_**public static main(String[] args) -> void**_
+- _public static **main**(String[] args) -> void_
 
-  1. Initialize an instance of `ArgParser` & give it to `this.args`
-  2. Iterate over `args` array, giving each one to `this.args` to be processed using `ArgParser.arg()`
-    - if `UnknownArg` or `BadPattern` is thrown, exit program & display error to user
-  3. Get the PWD from `System.getProperty("user.dir")`
-  4. Initialize an instance of `Crawler` with the PWD & the pattern from `this.args.getPattern()` & give the new instance to `this.crawler`
-  5. Discover test groups using `this.crawler`'s method `Crawler.crawl()`
-    - if `NoTestsFound` is thrown, exit program & display error to user
-  6. Initialize an instance of `Runner` & give it to `this.runner`
-  7. Give each `Group` found by `this.crawler` to `this.runner` using `Crawler.getGroups()` & iterating over the result, calling `Runner.addGroup()` on each `Group`
-  8. Run the tests using `Runner.run()`
-  9. Render the results to the user
+  1. Run the CLI with given args using `picocli.CommandLine.execute(args)`
+  2. System exit code to resulting int
+
+- _Constructor public **CLI()**_
+
+  1. Init an empty Runner()
+  2. Get current working directory from `System`
+
+- _public **call**(String[] args) -> int_
+
+  1. Start tracking time
+  2. Discover & compile test classes w/ `this.discover`
+  3. Mark compile time duration
+  4. Run tests
+  5. Mark run time duration & total time duration
+  6. Report times to user
+  7. Return 0 to indicate success
+
+- _private **discover**(File start, String pattern) -> void_
+
+  1. Create an empty list to store paths to test files
+  2. Init a `Crawler` with cwd & given pattern
+  3. Then initiate crawl with success handler that adds a matching file to the list & an error handler that indicates there was an error processing a given file
+  4. Compile and initialize test `Group`s using `this.compileAndInitFiles`, then add each initialized `Group` to `this.runner`
+  5. Catch and report errors thrown while crawling file tree
+
+- _private **compileAndInitFiles**(ArrayList<Path> paths) -> ArrayList\<Group\>_
+
+  1. Set up compiler & java file manager
+  2. Get list of source File objects from given paths
+  3. Compile files
+  4. Loop over given list of paths:
+    1. Get the fully qualified name for each path's class
+    2. Initialize the class from the fqn
+    3. Add the initialized `Group` to the list of Groups to return
+
+- _private **run**() -> void_
+
+  1. Run all `Group`s in `this.runner`
+  2. Loop over `this.runner.resultStrings()` to print each line
+
 
 
 
